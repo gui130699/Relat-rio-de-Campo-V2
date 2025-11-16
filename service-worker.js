@@ -1,4 +1,4 @@
-const CACHE_NAME = "relatorio-campo-cache-v4";
+const CACHE_NAME = "relatorio-campo-cache-v5";
 const ASSETS = [
   "./",
   "./index.html",
@@ -83,4 +83,66 @@ self.addEventListener("fetch", event => {
         });
       })
   );
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', event => {
+  console.log('[SW] Notification clicked:', event.action);
+  event.notification.close();
+
+  if (event.action === 'pause') {
+    // Enviar mensagem para pausar o timer
+    event.waitUntil(
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then(clients => {
+          clients.forEach(client => {
+            client.postMessage({ action: 'pauseTimer' });
+          });
+        })
+    );
+  } else if (event.action === 'stop') {
+    // Enviar mensagem para parar o timer
+    event.waitUntil(
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then(clients => {
+          clients.forEach(client => {
+            client.postMessage({ action: 'stopTimer' });
+          });
+        })
+    );
+  } else {
+    // Abrir ou focar na janela do app
+    event.waitUntil(
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then(clients => {
+          // Verificar se já existe uma janela aberta
+          for (const client of clients) {
+            if (client.url.includes(self.location.origin) && 'focus' in client) {
+              return client.focus();
+            }
+          }
+          // Se não, abrir nova janela
+          if (self.clients.openWindow) {
+            return self.clients.openWindow('/');
+          }
+        })
+    );
+  }
+});
+
+// Message handler para atualizar notificações
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SHOW_TIMER_NOTIFICATION') {
+    const { title, body, icon, actions, tag } = event.data;
+    
+    self.registration.showNotification(title, {
+      body,
+      icon,
+      badge: icon,
+      tag: tag || 'timer-notification',
+      requireInteraction: true,
+      actions: actions || [],
+      data: { url: '/' }
+    });
+  }
 });

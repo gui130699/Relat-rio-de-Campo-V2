@@ -50,6 +50,31 @@ function getCurrentUser() {
   return state.users.find(u => u.id === state.currentUserId) || null;
 }
 
+// ------------- Service Worker Messages ----------------
+
+// Listener para mensagens do Service Worker (ações das notificações)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', event => {
+    if (event.data && event.data.action === 'pauseTimer') {
+      // Pausar timer quando clicar na notificação
+      if (state.timerState && !state.timerState.pause) {
+        state.timerState.pause = true;
+        state.timerState.pauseStart = new Date().toISOString();
+        saveState();
+        updateCronometroDisplay();
+        showToast('Timer pausado', 'info');
+      }
+    } else if (event.data && event.data.action === 'stopTimer') {
+      // Abrir modal para encerrar
+      if (state.timerState) {
+        openModal('modal-cronometro');
+        // Focar na janela
+        window.focus();
+      }
+    }
+  });
+}
+
 // ------------- Toast Notifications ----------------
 
 function showToast(message, type = 'info', duration = 3000) {
@@ -690,9 +715,67 @@ function startCronometro() {
   
   timerInterval = setInterval(() => {
     updateCronometroDisplay();
+    updateTimerNotification();
   }, 1000);
   
   updateCronometroDisplay();
+  showTimerNotification();
+}
+
+// Mostrar notificação persistente do timer
+async function showTimerNotification() {
+  if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
+  
+  if (Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+  
+  if (Notification.permission !== 'granted') return;
+  
+  const registration = await navigator.serviceWorker.ready;
+  updateTimerNotification();
+}
+
+// Atualizar notificação do timer a cada segundo
+async function updateTimerNotification() {
+  if (!state.timerState || !('serviceWorker' in navigator)) return;
+  if (Notification.permission !== 'granted') return;
+  
+  try {
+    const start = new Date(state.timerState.start);
+    let elapsed = Date.now() - start.getTime() - (state.timerState.pausedTime || 0);
+    
+    if (state.timerState.pause) {
+      const pauseDuration = Date.now() - new Date(state.timerState.pauseStart).getTime();
+      elapsed -= pauseDuration;
+    }
+    
+    const totalSeconds = Math.floor(elapsed / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    const display = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    
+    const registration = await navigator.serviceWorker.ready;
+    
+    const actions = [];
+    if (!state.timerState.pause) {
+      actions.push({ action: 'pause', title: '⏸️ Pausar', icon: './assets/icon-192.png' });
+    }
+    actions.push({ action: 'stop', title: '⏹️ Encerrar', icon: './assets/icon-192.png' });
+    
+    registration.active.postMessage({
+      type: 'SHOW_TIMER_NOTIFICATION',
+      title: state.timerState.pause ? '⏸️ Timer Pausado' : '⏱️ Serviço em Andamento',
+      body: `${display} - ${state.timerState.modalidades.join(', ')}`,
+      icon: './assets/icon-192.png',
+      tag: 'timer-running',
+      actions: actions
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar notificação:', error);
+  }
 }
 
 function stopCronometro() {
@@ -705,6 +788,22 @@ function stopCronometro() {
   const headerTitle = document.getElementById("header-title");
   if (headerTitle && !state.timerState) {
     headerTitle.textContent = "Relatório de Campo";
+  }
+  
+  // Fechar notificações do timer
+  closeTimerNotification();
+}
+
+// Fechar notificação do timer
+async function closeTimerNotification() {
+  if (!('serviceWorker' in navigator)) return;
+  
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const notifications = await registration.getNotifications({ tag: 'timer-running' });
+    notifications.forEach(notification => notification.close());
+  } catch (error) {
+    console.error('Erro ao fechar notificação:', error);
   }
 }
 
