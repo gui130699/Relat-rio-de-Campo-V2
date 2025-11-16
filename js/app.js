@@ -148,7 +148,11 @@ function showView(name) {
     config: "Configurações",
     login: "Relatório de Campo"
   };
-  headerTitle.textContent = titles[name] || "Relatório de Campo";
+  
+  // Só atualizar o título se não houver timer ativo
+  if (!state.timerState) {
+    headerTitle.textContent = titles[name] || "Relatório de Campo";
+  }
 
   if (name === "dashboard") renderDashboard();
   if (name === "lancamento") initLancamentoView();
