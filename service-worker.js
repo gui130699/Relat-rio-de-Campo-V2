@@ -1,9 +1,10 @@
-const CACHE_NAME = "relatorio-campo-cache-v2";
+const CACHE_NAME = "relatorio-campo-cache-v3";
 const ASSETS = [
   "./",
   "./index.html",
   "./css/style.css",
   "./js/app.js",
+  "./js/firebase-sync.js",
   "./manifest.webmanifest"
 ];
 
