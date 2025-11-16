@@ -1018,6 +1018,38 @@ textarea:focus {
   font-weight: 600;
 }
 
+/* BOTÕES DE AÇÃO (EDITAR/EXCLUIR) */
+
+.list-item-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+  padding-left: 12px;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background: var(--color-accent-soft);
+  transform: scale(1.1);
+}
+
+.btn-icon-danger:hover {
+  background: rgba(244, 67, 54, 0.1);
+}
+
 /* UTILITÁRIOS */
 
 .hidden {

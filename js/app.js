@@ -2090,9 +2090,89 @@ function renderRevisitas() {
       abrirHistoricoRevisita(r.id);
     });
     
+    // Botões de ação
+    const actions = document.createElement("div");
+    actions.className = "list-item-actions";
+    
+    const btnEdit = document.createElement("button");
+    btnEdit.className = "btn-icon";
+    btnEdit.innerHTML = "✏️";
+    btnEdit.title = "Editar";
+    btnEdit.onclick = (e) => {
+      e.stopPropagation();
+      editarRevisita(r.id);
+    };
+    
+    const btnDelete = document.createElement("button");
+    btnDelete.className = "btn-icon btn-icon-danger";
+    btnDelete.innerHTML = "🗑️";
+    btnDelete.title = "Excluir";
+    btnDelete.onclick = (e) => {
+      e.stopPropagation();
+      excluirRevisita(r.id);
+    };
+    
+    actions.appendChild(btnEdit);
+    actions.appendChild(btnDelete);
+    
     li.appendChild(content);
+    li.appendChild(actions);
     ul.appendChild(li);
   });
+}
+
+function editarRevisita(revisitaId) {
+  const revisita = state.revisitas.find(r => r.id === revisitaId);
+  if (!revisita) return;
+  
+  const form = document.getElementById("form-add-revisita");
+  document.getElementById("revisita-nome").value = revisita.nome;
+  document.getElementById("revisita-endereco").value = revisita.endereco || "";
+  document.getElementById("revisita-telefone").value = revisita.telefone || "";
+  document.getElementById("revisita-publicacao").value = revisita.publicacao || "";
+  document.getElementById("revisita-assunto").value = revisita.assunto || "";
+  
+  openModal("modal-add-revisita");
+  
+  // Substituir evento de submit para edição
+  const newForm = form.cloneNode(true);
+  form.parentNode.replaceChild(newForm, form);
+  
+  newForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    
+    revisita.nome = document.getElementById("revisita-nome").value.trim();
+    revisita.endereco = document.getElementById("revisita-endereco").value.trim();
+    revisita.telefone = document.getElementById("revisita-telefone").value.trim();
+    revisita.publicacao = document.getElementById("revisita-publicacao").value.trim();
+    revisita.assunto = document.getElementById("revisita-assunto").value.trim();
+    
+    saveState();
+    renderRevisitas();
+    closeModal("modal-add-revisita");
+    showToast("Revisita atualizada!", "success");
+    
+    // Restaurar form original
+    initRevisitas();
+  });
+  
+  const btnCancel = newForm.querySelector("#btn-cancel-add-revisita");
+  btnCancel.onclick = () => {
+    closeModal("modal-add-revisita");
+    initRevisitas();
+  };
+}
+
+function excluirRevisita(revisitaId) {
+  const revisita = state.revisitas.find(r => r.id === revisitaId);
+  if (!revisita) return;
+  
+  if (confirm(`Deseja realmente excluir a revisita de ${revisita.nome}?\n\nEsta ação não pode ser desfeita.`)) {
+    state.revisitas = state.revisitas.filter(r => r.id !== revisitaId);
+    saveState();
+    renderRevisitas();
+    showToast("Revisita excluída.", "info");
+  }
 }
 
 function abrirHistoricoRevisita(revisitaId) {
@@ -2381,6 +2461,33 @@ function renderEstudos() {
     });
     
     li.appendChild(content);
+    
+    // Botões de editar e excluir
+    const actions = document.createElement("div");
+    actions.className = "list-item-actions";
+    
+    const btnEdit = document.createElement("button");
+    btnEdit.className = "btn-icon";
+    btnEdit.innerHTML = "✏️";
+    btnEdit.title = "Editar estudo";
+    btnEdit.onclick = (e) => {
+      e.stopPropagation();
+      editarEstudo(s.id);
+    };
+    
+    const btnDelete = document.createElement("button");
+    btnDelete.className = "btn-icon btn-icon-danger";
+    btnDelete.innerHTML = "🗑️";
+    btnDelete.title = "Excluir estudo";
+    btnDelete.onclick = (e) => {
+      e.stopPropagation();
+      excluirEstudo(s.id);
+    };
+    
+    actions.appendChild(btnEdit);
+    actions.appendChild(btnDelete);
+    li.appendChild(actions);
+    
     ul.appendChild(li);
   });
 }
@@ -2458,6 +2565,57 @@ function abrirHistoricoEstudo(estudoId) {
   };
   
   openModal("modal-historico-estudo");
+}
+
+// Editar estudo existente
+function editarEstudo(estudoId) {
+  const estudo = state.estudos.find(e => e.id === estudoId);
+  if (!estudo) return;
+  
+  // Preencher o formulário com os dados existentes
+  document.getElementById("nome-estudo").value = estudo.nome;
+  document.getElementById("endereco-estudo").value = estudo.endereco || "";
+  document.getElementById("telefone-estudo").value = estudo.telefone || "";
+  document.getElementById("dia-hora-estudo").value = estudo.diaHora || "";
+  
+  // Abrir o modal
+  openModal("modal-add-estudo");
+  
+  // Substituir o comportamento do formulário para atualizar ao invés de criar
+  const form = document.getElementById("form-add-estudo");
+  const novoForm = form.cloneNode(true);
+  form.parentNode.replaceChild(novoForm, form);
+  
+  novoForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    
+    // Atualizar os dados do estudo
+    estudo.nome = document.getElementById("nome-estudo").value.trim();
+    estudo.endereco = document.getElementById("endereco-estudo").value.trim();
+    estudo.telefone = document.getElementById("telefone-estudo").value.trim();
+    estudo.diaHora = document.getElementById("dia-hora-estudo").value.trim();
+    
+    saveState();
+    renderEstudos();
+    closeModal("modal-add-estudo");
+    showToast("Estudo atualizado com sucesso!", "success");
+    
+    // Restaurar o comportamento original do formulário
+    location.reload();
+  });
+}
+
+// Excluir estudo
+function excluirEstudo(estudoId) {
+  const estudo = state.estudos.find(e => e.id === estudoId);
+  if (!estudo) return;
+  
+  if (confirm(`Tem certeza que deseja excluir o estudo de ${estudo.nome}? Esta ação não pode ser desfeita.`)) {
+    state.estudos = state.estudos.filter(e => e.id !== estudoId);
+    saveState();
+    renderEstudos();
+    showToast("Estudo excluído com sucesso!", "success");
+  }
 }
 
 // Modal para registrar estudo (chamado do dashboard)
