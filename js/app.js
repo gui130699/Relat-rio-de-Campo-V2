@@ -1441,8 +1441,8 @@ function renderDashboard() {
   const meta = getMetaAtual(user.id, keyMes);
 
   const totalHoras = resumo.horas + resumo.minutos / 60;
-  document.getElementById("stat-horas").textContent =
-    `${resumo.horas}h ${String(resumo.minutos).padStart(2, "0")}m`;
+  document.getElementById("stat-horas").innerHTML =
+    `${resumo.horas}h&nbsp;${String(resumo.minutos).padStart(2, "0")}m`;
   document.getElementById("stat-meta").textContent =
     meta != null ? `${meta.toFixed(1)}h` : "—";
 
