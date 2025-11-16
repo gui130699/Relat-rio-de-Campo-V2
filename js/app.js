@@ -285,28 +285,7 @@ function initAuth() {
     }
 
     try {
-      // MODO LOCAL: Firebase temporariamente desabilitado
-      // Para habilitar: Ative "Email/Password" em console.firebase.google.com > Authentication > Sign-in method
-      
-      const id = uuid();
-      state.users.push({ id, nome, congregacao, tipo, email, senha });
-      state.config[id] = { nome, congregacao, tipo, anciao: "" };
-      state.metas[id] = {
-        tipo,
-        pubMensal: null,
-        auxMensal: null,
-        regTipo: "mensal",
-        regMensal: null,
-        regAnual: null
-      };
-      state.currentUserId = id;
-      saveState();
-      formSignup.reset();
-      populateModalidades();
-      showToast("Conta criada com sucesso!", "success");
-      showView("dashboard");
-      
-      /* Firebase Auth - Descomente após configurar
+      // Criar conta no Firebase
       if (window.firebaseAuth && window.firebaseAuthMethods) {
         const { createUserWithEmailAndPassword } = window.firebaseAuthMethods;
         const auth = window.firebaseAuth;
@@ -317,24 +296,60 @@ function initAuth() {
         
         state.users.push({ id, nome, congregacao, tipo, email, senha });
         state.config[id] = { nome, congregacao, tipo, anciao: "" };
-        state.metas[id] = { tipo, pubMensal: null, auxMensal: null, regTipo: "mensal", regMensal: null, regAnual: null };
+        state.metas[id] = {
+          tipo,
+          pubMensal: null,
+          auxMensal: null,
+          regTipo: "mensal",
+          regMensal: null,
+          regAnual: null
+        };
         state.currentUserId = id;
         saveState();
         
+        // Sincronizar com Firebase
         if (window.syncToFirebase) {
           await syncToFirebase(id);
-          if (window.enableAutoSync) enableAutoSync(id);
+        }
+        if (window.enableAutoSync) {
+          enableAutoSync(id);
         }
         
         formSignup.reset();
         populateModalidades();
         showToast("Conta criada com sucesso!", "success");
         showView("dashboard");
+      } else {
+        // Fallback local se Firebase não estiver disponível
+        const id = uuid();
+        state.users.push({ id, nome, congregacao, tipo, email, senha });
+        state.config[id] = { nome, congregacao, tipo, anciao: "" };
+        state.metas[id] = {
+          tipo,
+          pubMensal: null,
+          auxMensal: null,
+          regTipo: "mensal",
+          regMensal: null,
+          regAnual: null
+        };
+        state.currentUserId = id;
+        saveState();
+        formSignup.reset();
+        populateModalidades();
+        showToast("Conta criada (modo local).", "success");
+        showView("dashboard");
       }
-      */
     } catch (error) {
       console.error("Erro ao criar conta:", error);
-      showToast("Erro ao criar conta. Tente novamente.", "error");
+      if (error.code === 'auth/email-already-in-use') {
+        showToast("Já existe uma conta com esse e-mail.", "error");
+      } else if (error.code === 'auth/weak-password') {
+        showToast("A senha deve ter pelo menos 6 caracteres.", "error");
+      } else if (error.code === 'auth/invalid-email') {
+        showToast("E-mail inválido.", "error");
+      } else {
+        showToast("Erro ao criar conta. Tente novamente.", "error");
+      }
     }
   });
 
@@ -344,21 +359,7 @@ function initAuth() {
     const senha = document.getElementById("login-password").value;
     
     try {
-      // MODO LOCAL: Autenticação local apenas
-      const user = state.users.find(u => u.email === email && u.senha === senha);
-      if (!user) {
-        showToast("E-mail ou senha inválidos.", "error");
-        return;
-      }
-      
-      state.currentUserId = user.id;
-      saveState();
-      populateModalidades();
-      checkTimerStatus();
-      showToast("Login realizado com sucesso!", "success");
-      showView("dashboard");
-      
-      /* Firebase Auth - Descomente após configurar
+      // Login no Firebase
       if (window.firebaseAuth && window.firebaseAuthMethods) {
         const { signInWithEmailAndPassword } = window.firebaseAuthMethods;
         const auth = window.firebaseAuth;
@@ -367,30 +368,59 @@ function initAuth() {
         const firebaseUser = userCredential.user;
         const userId = firebaseUser.uid;
         
+        // Carregar dados do Firebase
         if (window.loadFromFirebase) {
           await loadFromFirebase(userId);
         }
         
         loadState();
+        
+        // Verificar se usuário existe localmente
         let user = state.users.find(u => u.id === userId);
         if (!user) {
+          // Criar entrada local se não existir
           user = { id: userId, email, senha, nome: email.split('@')[0], congregacao: '', tipo: 'publicador' };
           state.users.push(user);
         }
         
         state.currentUserId = userId;
         saveState();
-        if (window.enableAutoSync) enableAutoSync(userId);
+        
+        // Ativar sincronização automática
+        if (window.enableAutoSync) {
+          enableAutoSync(userId);
+        }
         
         populateModalidades();
         checkTimerStatus();
         showToast("Login realizado com sucesso!", "success");
         showView("dashboard");
+      } else {
+        // Fallback: login local
+        const user = state.users.find(u => u.email === email && u.senha === senha);
+        if (!user) {
+          showToast("E-mail ou senha inválidos.", "error");
+          return;
+        }
+        
+        state.currentUserId = user.id;
+        saveState();
+        populateModalidades();
+        checkTimerStatus();
+        showToast("Login realizado (modo local).", "success");
+        showView("dashboard");
       }
-      */
     } catch (error) {
       console.error("Erro ao fazer login:", error);
-      showToast("Erro ao fazer login. Tente novamente.", "error");
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        showToast("E-mail ou senha inválidos.", "error");
+      } else if (error.code === 'auth/invalid-email') {
+        showToast("E-mail inválido.", "error");
+      } else if (error.code === 'auth/invalid-credential') {
+        showToast("E-mail ou senha inválidos.", "error");
+      } else {
+        showToast("Erro ao fazer login. Tente novamente.", "error");
+      }
     }
   });
 }
