@@ -787,7 +787,6 @@ function perguntarContatoPessoas(pessoas, callback) {
   
   perguntarProxima();
 }
-}
 
 function startCronometro() {
   if (timerInterval) clearInterval(timerInterval);
