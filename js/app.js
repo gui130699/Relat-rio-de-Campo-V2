@@ -170,6 +170,7 @@ function showView(name) {
     estudos: "Estudos bíblicos",
     metas: "Metas",
     relatorio: "Relatório",
+    ajuda: "Ajuda",
     config: "Configurações",
     login: "Relatório de Campo"
   };
