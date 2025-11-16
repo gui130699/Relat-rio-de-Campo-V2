@@ -1352,13 +1352,17 @@ function initLancamentoForm() {
   
   renderModalidadesCheckboxes();
 
-  // Prevenir múltiplos event listeners - clonar e substituir para remover todos os listeners
+  // Prevenir múltiplos event listeners - clonar formulário para remover todos os listeners
   if (form.dataset.initialized) {
     return;
   }
-  form.dataset.initialized = "true";
+  
+  const newForm = form.cloneNode(true);
+  form.parentNode.replaceChild(newForm, form);
+  const formRef = document.getElementById("form-lancamento");
+  formRef.dataset.initialized = "true";
 
-  const handleSubmit = (e) => {
+  formRef.addEventListener("submit", (e) => {
     e.preventDefault();
     const user = getCurrentUser();
     if (!user) return;
@@ -1437,18 +1441,17 @@ function initLancamentoForm() {
         cartas: infoAdicional.cartas
       });
       saveState();
-      form.reset();
+      formRef.reset();
       renderModalidadesCheckboxes();
       pessoasSelecionadasLancamento = {};
       document.getElementById("lan-data").value = todayISO();
-      pessoaInfo.style.display = "none";
+      const pessoaInfo = document.getElementById("lan-pessoa-info");
+      if (pessoaInfo) pessoaInfo.style.display = "none";
       showToast("Lançamento salvo.", "success");
       renderDashboard();
       showView("dashboard");
     });
-  };
-
-  form.addEventListener("submit", handleSubmit);
+  });
 
   const btnOpen = document.getElementById("btn-open-add-entry");
   if (btnOpen && !btnOpen.dataset.initialized) {
@@ -1838,7 +1841,12 @@ function renderLancamentos() {
 
     const resumo = document.createElement("span");
     resumo.className = "lancamento-resumo";
-    const modalidadesTexto = Array.isArray(e.modalidades) ? e.modalidades.join(", ") : (e.modalidade || "Sem modalidade");
+    let modalidadesTexto = "Sem modalidade";
+    if (Array.isArray(e.modalidades) && e.modalidades.length > 0) {
+      modalidadesTexto = e.modalidades.join(", ");
+    } else if (e.modalidade) {
+      modalidadesTexto = e.modalidade;
+    }
     resumo.textContent = `${e.horas}h ${String(e.minutos).padStart(2, "0")}m • ${modalidadesTexto}`;
 
     headerInfo.appendChild(data);
@@ -1869,9 +1877,16 @@ function renderLancamentos() {
     // Modalidade
     const linhaModalidade = document.createElement("div");
     linhaModalidade.className = "lancamento-detalhe-linha";
-    const modalidadesDetalhe = Array.isArray(e.modalidades) ? e.modalidades.join(", ") : (e.modalidade || "Sem modalidade");
+    let modalidadesDetalhe = "Sem modalidade";
+    let isPlural = false;
+    if (Array.isArray(e.modalidades) && e.modalidades.length > 0) {
+      modalidadesDetalhe = e.modalidades.join(", ");
+      isPlural = e.modalidades.length > 1;
+    } else if (e.modalidade) {
+      modalidadesDetalhe = e.modalidade;
+    }
     linhaModalidade.innerHTML = `
-      <span class="lancamento-detalhe-label">Modalidade${Array.isArray(e.modalidades) && e.modalidades.length > 1 ? 's' : ''}:</span>
+      <span class="lancamento-detalhe-label">Modalidade${isPlural ? 's' : ''}:</span>
       <span class="lancamento-detalhe-valor">${modalidadesDetalhe}</span>
     `;
     detalhesContent.appendChild(linhaModalidade);
