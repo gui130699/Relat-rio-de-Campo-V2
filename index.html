@@ -47,13 +47,20 @@
           <form id="form-login" class="form form-auth">
             <label>
               E-mail
-              <input type="email" id="login-email" required />
+              <input type="email" id="login-email" required autocomplete="username" />
             </label>
             <label>
               Senha
-              <input type="password" id="login-password" required />
+              <input type="password" id="login-password" required autocomplete="current-password" />
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="login-remember-me" />
+              <span>Manter conectado</span>
             </label>
             <button type="submit" class="btn-primary">Entrar</button>
+            <button type="button" id="btn-biometric-login" class="btn-secondary" style="display: none; margin-top: 8px;">
+              🔐 Entrar com Face ID / Touch ID
+            </button>
           </form>
 
           <!-- Cadastro -->

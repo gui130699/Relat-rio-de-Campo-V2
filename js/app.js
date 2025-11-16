@@ -232,6 +232,173 @@ function initThemeToggle() {
   });
 }
 
+// ------------- Biometria e Auto-login ----------------
+
+async function checkBiometricSupport() {
+  if (!window.PublicKeyCredential) return false;
+  try {
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    return available;
+  } catch {
+    return false;
+  }
+}
+
+async function registerBiometricCredential(email, password) {
+  try {
+    const biometricSupported = await checkBiometricSupport();
+    if (!biometricSupported) return;
+
+    // Criar credencial WebAuthn
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    
+    const publicKey = {
+      challenge: challenge,
+      rp: {
+        name: "Relatório de Campo",
+        id: window.location.hostname
+      },
+      user: {
+        id: new TextEncoder().encode(email),
+        name: email,
+        displayName: email.split('@')[0]
+      },
+      pubKeyCredParams: [
+        { alg: -7, type: "public-key" },  // ES256
+        { alg: -257, type: "public-key" } // RS256
+      ],
+      authenticatorSelection: {
+        authenticatorAttachment: "platform",
+        userVerification: "required"
+      },
+      timeout: 60000,
+      attestation: "none"
+    };
+
+    const credential = await navigator.credentials.create({ publicKey });
+    
+    // Salvar ID da credencial
+    localStorage.setItem("biometricCredentialId", btoa(String.fromCharCode(...new Uint8Array(credential.rawId))));
+    localStorage.setItem("biometricEmail", email);
+    
+    console.log("Credencial biométrica registrada com sucesso");
+  } catch (error) {
+    console.log("Biometria não configurada:", error.message);
+  }
+}
+
+async function loginWithBiometric() {
+  try {
+    const credentialIdBase64 = localStorage.getItem("biometricCredentialId");
+    const email = localStorage.getItem("biometricEmail");
+    
+    if (!credentialIdBase64 || !email) {
+      showToast("Nenhuma credencial biométrica encontrada.", "error");
+      return;
+    }
+
+    // Converter credentialId de base64 para Uint8Array
+    const credentialId = Uint8Array.from(atob(credentialIdBase64), c => c.charCodeAt(0));
+    
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    
+    const publicKey = {
+      challenge: challenge,
+      rpId: window.location.hostname,
+      allowCredentials: [{
+        id: credentialId,
+        type: "public-key",
+        transports: ["internal"]
+      }],
+      userVerification: "required",
+      timeout: 60000
+    };
+
+    await navigator.credentials.get({ publicKey });
+    
+    // Autenticação bem-sucedida - fazer login automático
+    const rememberedUser = localStorage.getItem("rememberedUser");
+    if (rememberedUser) {
+      const { email, senha, userId } = JSON.parse(rememberedUser);
+      document.getElementById("login-email").value = email;
+      document.getElementById("login-password").value = senha;
+      document.getElementById("login-remember-me").checked = true;
+      
+      // Submeter formulário
+      document.getElementById("form-login").dispatchEvent(new Event("submit"));
+    }
+  } catch (error) {
+    console.error("Erro ao autenticar com biometria:", error);
+    showToast("Falha na autenticação biométrica.", "error");
+  }
+}
+
+async function checkAutoLogin() {
+  const rememberedUser = localStorage.getItem("rememberedUser");
+  if (rememberedUser) {
+    try {
+      const { email, senha, userId } = JSON.parse(rememberedUser);
+      
+      // Preencher campos
+      document.getElementById("login-email").value = email;
+      document.getElementById("login-password").value = senha;
+      document.getElementById("login-remember-me").checked = true;
+      
+      // Verificar se biometria está disponível
+      const biometricSupported = await checkBiometricSupport();
+      const hasBiometric = localStorage.getItem("biometricCredentialId");
+      
+      if (biometricSupported && hasBiometric) {
+        // Mostrar botão de login biométrico
+        const btnBiometric = document.getElementById("btn-biometric-login");
+        btnBiometric.style.display = "block";
+        btnBiometric.onclick = loginWithBiometric;
+      }
+      
+      // Auto-login silencioso se Firebase estiver disponível
+      if (window.firebaseAuth && window.firebaseAuthMethods) {
+        const { signInWithEmailAndPassword } = window.firebaseAuthMethods;
+        const auth = window.firebaseAuth;
+        
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+          const firebaseUser = userCredential.user;
+          const userId = firebaseUser.uid;
+          
+          if (window.loadFromFirebase) {
+            await loadFromFirebase(userId);
+          }
+          
+          loadState();
+          
+          let user = state.users.find(u => u.id === userId);
+          if (!user) {
+            user = { id: userId, email, senha, nome: email.split('@')[0], congregacao: '', tipo: 'publicador' };
+            state.users.push(user);
+          }
+          
+          state.currentUserId = userId;
+          saveState();
+          
+          if (window.enableAutoSync) {
+            enableAutoSync(userId);
+          }
+          
+          populateModalidades();
+          checkTimerStatus();
+          showView("dashboard");
+        } catch (error) {
+          console.log("Auto-login falhou, usuário precisa fazer login manual");
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao verificar auto-login:", error);
+    }
+  }
+}
+
 // ------------- Instalação PWA ----------------
 
 let deferredPrompt;
@@ -387,6 +554,7 @@ function initAuth() {
     e.preventDefault();
     const email = document.getElementById("login-email").value.trim().toLowerCase();
     const senha = document.getElementById("login-password").value;
+    const rememberMe = document.getElementById("login-remember-me").checked;
     
     try {
       // Login no Firebase
@@ -414,6 +582,16 @@ function initAuth() {
         }
         
         state.currentUserId = userId;
+        
+        // Salvar credenciais se "Manter conectado" estiver marcado
+        if (rememberMe) {
+          localStorage.setItem("rememberedUser", JSON.stringify({ email, senha, userId }));
+          // Tentar registrar credencial biométrica
+          await registerBiometricCredential(email, senha);
+        } else {
+          localStorage.removeItem("rememberedUser");
+        }
+        
         saveState();
         
         // Ativar sincronização automática
@@ -434,6 +612,15 @@ function initAuth() {
         }
         
         state.currentUserId = user.id;
+        
+        // Salvar credenciais se "Manter conectado" estiver marcado
+        if (rememberMe) {
+          localStorage.setItem("rememberedUser", JSON.stringify({ email, senha, userId: user.id }));
+          await registerBiometricCredential(email, senha);
+        } else {
+          localStorage.removeItem("rememberedUser");
+        }
+        
         saveState();
         populateModalidades();
         checkTimerStatus();
@@ -2573,6 +2760,15 @@ function initConfigForm() {
   const btnLogout = document.getElementById("btn-logout");
   btnLogout.addEventListener("click", async () => {
     if (confirm("Deseja realmente sair da conta?")) {
+      // Perguntar se deseja manter conectado
+      const keepRemembered = confirm("Deseja manter seus dados de login salvos para próximo acesso?");
+      
+      if (!keepRemembered) {
+        localStorage.removeItem("rememberedUser");
+        localStorage.removeItem("biometricCredentialId");
+        localStorage.removeItem("biometricEmail");
+      }
+      
       try {
         await waitForFirebase();
         const { signOut } = window.firebaseAuthMethods;
@@ -2877,7 +3073,7 @@ function initBottomNav() {
 
 // ------------- Init geral ----------------
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   loadState();
   initThemeToggle();
   initInstallButton();
@@ -2902,5 +3098,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showView("dashboard");
   } else {
     showView("login");
+    // Verificar auto-login após mostrar tela de login
+    await checkAutoLogin();
   }
 });
