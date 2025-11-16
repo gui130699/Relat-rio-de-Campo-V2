@@ -152,10 +152,17 @@ function showView(name) {
   }
 
   const bottomNav = document.getElementById("bottom-nav");
+  const btnHeaderAjuda = document.getElementById("btn-header-ajuda");
+  const btnHeaderConfig = document.getElementById("btn-header-config");
+  
   if (name === "login") {
     bottomNav.style.display = "none";
+    if (btnHeaderAjuda) btnHeaderAjuda.style.display = "none";
+    if (btnHeaderConfig) btnHeaderConfig.style.display = "none";
   } else {
     bottomNav.style.display = "flex";
+    if (btnHeaderAjuda) btnHeaderAjuda.style.display = "flex";
+    if (btnHeaderConfig) btnHeaderConfig.style.display = "flex";
   }
 
   document.querySelectorAll(".nav-button").forEach(btn => {
@@ -3059,7 +3066,7 @@ function abrirSelecaoAnciao(callback) {
   openModal("modal-selecionar-anciao");
 }
 
-// ------------- Navegação inferior ----------------
+// ------------- Navegação inferior e header ----------------
 
 function initBottomNav() {
   const nav = document.getElementById("bottom-nav");
@@ -3068,10 +3075,22 @@ function initBottomNav() {
     if (!btn) return;
     const view = btn.dataset.nav;
     if (view === "dashboard" || view === "lancamento" || view === "revisitas" ||
-        view === "relatorio" || view === "ajuda" || view === "config" || view === "estudos") {
+        view === "relatorio" || view === "estudos") {
       showView(view);
     }
   });
+  
+  // Botões do header
+  const btnHeaderAjuda = document.getElementById("btn-header-ajuda");
+  const btnHeaderConfig = document.getElementById("btn-header-config");
+  
+  if (btnHeaderAjuda) {
+    btnHeaderAjuda.addEventListener("click", () => showView("ajuda"));
+  }
+  
+  if (btnHeaderConfig) {
+    btnHeaderConfig.addEventListener("click", () => showView("config"));
+  }
 }
 
 // ------------- Init geral ----------------
