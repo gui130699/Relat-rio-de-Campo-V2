@@ -1838,7 +1838,8 @@ function renderLancamentos() {
 
     const resumo = document.createElement("span");
     resumo.className = "lancamento-resumo";
-    resumo.textContent = `${e.horas}h ${String(e.minutos).padStart(2, "0")}m • ${e.modalidade}`;
+    const modalidadesTexto = Array.isArray(e.modalidades) ? e.modalidades.join(", ") : (e.modalidade || "Sem modalidade");
+    resumo.textContent = `${e.horas}h ${String(e.minutos).padStart(2, "0")}m • ${modalidadesTexto}`;
 
     headerInfo.appendChild(data);
     headerInfo.appendChild(resumo);
@@ -1868,9 +1869,10 @@ function renderLancamentos() {
     // Modalidade
     const linhaModalidade = document.createElement("div");
     linhaModalidade.className = "lancamento-detalhe-linha";
+    const modalidadesDetalhe = Array.isArray(e.modalidades) ? e.modalidades.join(", ") : (e.modalidade || "Sem modalidade");
     linhaModalidade.innerHTML = `
-      <span class="lancamento-detalhe-label">Modalidade:</span>
-      <span class="lancamento-detalhe-valor">${e.modalidade}</span>
+      <span class="lancamento-detalhe-label">Modalidade${Array.isArray(e.modalidades) && e.modalidades.length > 1 ? 's' : ''}:</span>
+      <span class="lancamento-detalhe-valor">${modalidadesDetalhe}</span>
     `;
     detalhesContent.appendChild(linhaModalidade);
 
