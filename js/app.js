@@ -1352,6 +1352,10 @@ function initLancamentoForm() {
   
   renderModalidadesCheckboxes();
 
+  // Prevenir múltiplos event listeners
+  if (form.dataset.initialized) return;
+  form.dataset.initialized = "true";
+
   form.addEventListener("submit", e => {
     e.preventDefault();
     const user = getCurrentUser();
