@@ -1352,11 +1352,13 @@ function initLancamentoForm() {
   
   renderModalidadesCheckboxes();
 
-  // Prevenir múltiplos event listeners
-  if (form.dataset.initialized) return;
+  // Prevenir múltiplos event listeners - clonar e substituir para remover todos os listeners
+  if (form.dataset.initialized) {
+    return;
+  }
   form.dataset.initialized = "true";
 
-  form.addEventListener("submit", e => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     const user = getCurrentUser();
     if (!user) return;
@@ -1444,10 +1446,13 @@ function initLancamentoForm() {
       renderDashboard();
       showView("dashboard");
     });
-  });
+  };
+
+  form.addEventListener("submit", handleSubmit);
 
   const btnOpen = document.getElementById("btn-open-add-entry");
-  if (btnOpen) {
+  if (btnOpen && !btnOpen.dataset.initialized) {
+    btnOpen.dataset.initialized = "true";
     btnOpen.addEventListener("click", () => {
       showView("lancamento");
     });
