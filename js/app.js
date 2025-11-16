@@ -1270,35 +1270,79 @@ function initLancamentoView() {
 
 function initLancamentoForm() {
   const form = document.getElementById("form-lancamento");
-  const selectModalidade = document.getElementById("lan-modalidade");
+  const modalidadesList = document.getElementById("lan-modalidades-list");
   const pessoaInfo = document.getElementById("lan-pessoa-info");
   const pessoaIdInput = document.getElementById("lan-pessoa-id");
   const pessoaNomeInput = document.getElementById("lan-pessoa-nome");
+  
+  let pessoasSelecionadas = {}; // { modalidade: { id, nome } }
 
-  // Interceptar mudança de modalidade
-  selectModalidade.addEventListener("change", () => {
-    const modalidade = selectModalidade.value;
+  // Renderizar checkboxes de modalidades
+  function renderModalidadesCheckboxes() {
+    modalidadesList.innerHTML = "";
     
-    if (modalidade === "Revisitas") {
-      abrirSelecaoRevisita((revisita) => {
-        pessoaIdInput.value = revisita.id;
-        pessoaNomeInput.value = revisita.nome;
-        pessoaInfo.textContent = `📍 ${revisita.nome}`;
-        pessoaInfo.style.display = "block";
+    state.modalidades.forEach(mod => {
+      const div = document.createElement("div");
+      div.className = "checkbox-item";
+      
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.id = `lan-mod-${mod}`;
+      checkbox.value = mod;
+      
+      const label = document.createElement("label");
+      label.setAttribute("for", `lan-mod-${mod}`);
+      label.textContent = mod;
+      
+      div.appendChild(checkbox);
+      div.appendChild(label);
+      
+      // Click handler para seleção de pessoa
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) {
+          if (mod === "Revisitas") {
+            abrirSelecaoRevisita((revisita) => {
+              pessoasSelecionadas[mod] = { id: revisita.id, nome: revisita.nome };
+              atualizarPessoaInfo();
+            }, false);
+          } else if (mod === "Estudo Bíblico") {
+            abrirSelecaoEstudo((estudo) => {
+              pessoasSelecionadas[mod] = { id: estudo.id, nome: estudo.nome };
+              atualizarPessoaInfo();
+            }, false);
+          }
+        } else {
+          delete pessoasSelecionadas[mod];
+          atualizarPessoaInfo();
+        }
       });
-    } else if (modalidade === "Estudo Bíblico") {
-      abrirSelecaoEstudo((estudo) => {
-        pessoaIdInput.value = estudo.id;
-        pessoaNomeInput.value = estudo.nome;
-        pessoaInfo.textContent = `📖 ${estudo.nome}`;
-        pessoaInfo.style.display = "block";
+      
+      div.addEventListener("click", (e) => {
+        if (e.target !== checkbox) {
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event("change"));
+        }
       });
+      
+      modalidadesList.appendChild(div);
+    });
+  }
+  
+  function atualizarPessoaInfo() {
+    const pessoas = Object.entries(pessoasSelecionadas).map(([mod, pessoa]) => {
+      const icon = mod === "Revisitas" ? "📍" : "📖";
+      return `${icon} ${pessoa.nome}`;
+    });
+    
+    if (pessoas.length > 0) {
+      pessoaInfo.textContent = pessoas.join(" | ");
+      pessoaInfo.style.display = "block";
     } else {
-      pessoaIdInput.value = "";
-      pessoaNomeInput.value = "";
       pessoaInfo.style.display = "none";
     }
-  });
+  }
+  
+  renderModalidadesCheckboxes();
 
   form.addEventListener("submit", e => {
     e.preventDefault();
@@ -1308,39 +1352,50 @@ function initLancamentoForm() {
     const data = document.getElementById("lan-data").value;
     const horas = Number(document.getElementById("lan-horas").value || 0);
     const minutos = Number(document.getElementById("lan-minutos").value || 0);
-    const modalidade = document.getElementById("lan-modalidade").value;
     const obs = document.getElementById("lan-obs").value.trim();
-    const pessoaNome = pessoaNomeInput.value;
+    
+    // Obter modalidades selecionadas
+    const modalidadesSelecionadas = [];
+    document.querySelectorAll("#lan-modalidades-list input:checked").forEach(cb => {
+      modalidadesSelecionadas.push(cb.value);
+    });
+    
+    if (modalidadesSelecionadas.length === 0) {
+      showToast("Selecione pelo menos uma modalidade.", "warning");
+      return;
+    }
 
-    // Adicionar nome da pessoa na observação se for revisita ou estudo
+    // Adicionar nomes das pessoas na observação
     let obsCompleta = obs;
-    if (pessoaNome && (modalidade === "Revisitas" || modalidade === "Estudo Bíblico")) {
-      obsCompleta = `${pessoaNome}${obs ? ': ' + obs : ''}`;
+    const pessoasNomes = Object.values(pessoasSelecionadas).map(p => p.nome);
+    if (pessoasNomes.length > 0) {
+      obsCompleta = `${pessoasNomes.join(", ")}${obs ? ': ' + obs : ''}`;
     }
 
-    // Se for revisita ou estudo, registrar contato no histórico
-    const pessoaId = pessoaIdInput.value;
-    if (pessoaId && modalidade === "Revisitas") {
-      const revisita = state.revisitas.find(r => r.id === pessoaId);
-      if (revisita) {
-        if (!revisita.historico) revisita.historico = [];
-        revisita.historico.push({
-          data: data,
-          obs: obs || `Lançamento: ${horas}h${minutos}min`
-        });
-        revisita.ultimoContato = data;
+    // Registrar contatos no histórico
+    Object.entries(pessoasSelecionadas).forEach(([modalidade, pessoa]) => {
+      if (modalidade === "Revisitas") {
+        const revisita = state.revisitas.find(r => r.id === pessoa.id);
+        if (revisita) {
+          if (!revisita.historico) revisita.historico = [];
+          revisita.historico.push({
+            data: data,
+            obs: obs || `Lançamento: ${horas}h${minutos}min`
+          });
+          revisita.ultimoContato = data;
+        }
+      } else if (modalidade === "Estudo Bíblico") {
+        const estudo = state.estudos.find(e => e.id === pessoa.id);
+        if (estudo) {
+          if (!estudo.historico) estudo.historico = [];
+          estudo.historico.push({
+            data: data,
+            obs: obs || `Lançamento: ${horas}h${minutos}min`
+          });
+          estudo.ultimoContato = data;
+        }
       }
-    } else if (pessoaId && modalidade === "Estudo Bíblico") {
-      const estudo = state.estudos.find(e => e.id === pessoaId);
-      if (estudo) {
-        if (!estudo.historico) estudo.historico = [];
-        estudo.historico.push({
-          data: data,
-          obs: obs || `Lançamento: ${horas}h${minutos}min`
-        });
-        estudo.ultimoContato = data;
-      }
-    }
+    });
     
     // Abrir modal de informações adicionais
     abrirInfoAdicional((infoAdicional) => {
@@ -1350,7 +1405,7 @@ function initLancamentoForm() {
         data,
         horas,
         minutos,
-        modalidade,
+        modalidades: modalidadesSelecionadas,
         obs: obsCompleta,
         publicacoes: infoAdicional.publicacoes,
         revisitasAbertas: infoAdicional.revisitasAbertas,
@@ -1358,9 +1413,9 @@ function initLancamentoForm() {
       });
       saveState();
       form.reset();
+      renderModalidadesCheckboxes();
+      pessoasSelecionadas = {};
       document.getElementById("lan-data").value = todayISO();
-      pessoaIdInput.value = "";
-      pessoaNomeInput.value = "";
       pessoaInfo.style.display = "none";
       showToast("Lançamento salvo.", "success");
       renderDashboard();
@@ -2926,8 +2981,13 @@ function gerarResumoMes(userId, ano, mes) {
       if (k === key) {
         resumo.horas += e.horas || 0;
         resumo.minutos += e.minutos || 0;
-        if (e.modalidade === "Revisitas") resumo.revisitas++;
-        if (e.modalidade === "Estudo Bíblico") resumo.estudos++;
+        
+        // Compatibilidade: suporta modalidade (antiga) e modalidades (nova)
+        const modalidades = e.modalidades || (e.modalidade ? [e.modalidade] : []);
+        
+        if (modalidades.includes("Revisitas")) resumo.revisitas++;
+        if (modalidades.includes("Estudo Bíblico")) resumo.estudos++;
+        
         resumo.publicacoes += e.publicacoes || 0;
         resumo.revisitasAbertas += e.revisitasAbertas || 0;
         resumo.cartas += e.cartas || 0;
