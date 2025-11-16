@@ -1358,8 +1358,19 @@ function initLancamentoForm() {
     if (!user) return;
 
     const data = document.getElementById("lan-data").value;
+    if (!data) {
+      showToast("Selecione uma data.", "warning");
+      return;
+    }
+    
     const horas = Number(document.getElementById("lan-horas").value || 0);
     const minutos = Number(document.getElementById("lan-minutos").value || 0);
+    
+    if (horas === 0 && minutos === 0) {
+      showToast("Informe pelo menos horas ou minutos.", "warning");
+      return;
+    }
+    
     const obs = document.getElementById("lan-obs").value.trim();
     
     // Obter modalidades selecionadas
@@ -2029,6 +2040,28 @@ function initRevisitas() {
     const publicacao = document.getElementById("revisita-publicacao").value.trim();
     const assunto = document.getElementById("revisita-assunto").value.trim();
     
+    // Verificar se está editando
+    if (form.dataset.editingId) {
+      const revisita = state.revisitas.find(r => r.id === form.dataset.editingId);
+      if (revisita) {
+        revisita.nome = nome;
+        revisita.endereco = endereco;
+        revisita.telefone = telefone;
+        revisita.publicacao = publicacao;
+        revisita.assunto = assunto;
+        
+        delete form.dataset.editingId;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.textContent = "Cadastrar";
+        
+        saveState();
+        renderRevisitas();
+        closeModal("modal-add-revisita");
+        showToast("Revisita atualizada!", "success");
+        return;
+      }
+    }
+    
     state.revisitas.push({
       id: uuid(),
       userId: user.id,
@@ -2132,35 +2165,12 @@ function editarRevisita(revisitaId) {
   document.getElementById("revisita-publicacao").value = revisita.publicacao || "";
   document.getElementById("revisita-assunto").value = revisita.assunto || "";
   
+  form.dataset.editingId = revisitaId;
+  
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) submitBtn.textContent = "Atualizar";
+  
   openModal("modal-add-revisita");
-  
-  // Substituir evento de submit para edição
-  const newForm = form.cloneNode(true);
-  form.parentNode.replaceChild(newForm, form);
-  
-  newForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    
-    revisita.nome = document.getElementById("revisita-nome").value.trim();
-    revisita.endereco = document.getElementById("revisita-endereco").value.trim();
-    revisita.telefone = document.getElementById("revisita-telefone").value.trim();
-    revisita.publicacao = document.getElementById("revisita-publicacao").value.trim();
-    revisita.assunto = document.getElementById("revisita-assunto").value.trim();
-    
-    saveState();
-    renderRevisitas();
-    closeModal("modal-add-revisita");
-    showToast("Revisita atualizada!", "success");
-    
-    // Restaurar form original
-    initRevisitas();
-  });
-  
-  const btnCancel = newForm.querySelector("#btn-cancel-add-revisita");
-  btnCancel.onclick = () => {
-    closeModal("modal-add-revisita");
-    initRevisitas();
-  };
 }
 
 function excluirRevisita(revisitaId) {
@@ -2401,6 +2411,27 @@ function initEstudos() {
     const telefone = document.getElementById("estudo-telefone").value.trim();
     const diaHora = document.getElementById("estudo-diahora").value.trim();
     
+    // Verificar se está editando
+    if (form.dataset.editingId) {
+      const estudo = state.estudos.find(e => e.id === form.dataset.editingId);
+      if (estudo) {
+        estudo.nome = nome;
+        estudo.endereco = endereco;
+        estudo.telefone = telefone;
+        estudo.diaHora = diaHora;
+        
+        delete form.dataset.editingId;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.textContent = "Cadastrar";
+        
+        saveState();
+        renderEstudos();
+        closeModal("modal-add-estudo");
+        showToast("Estudo atualizado!", "success");
+        return;
+      }
+    }
+    
     state.estudos.push({
       id: uuid(),
       userId: user.id,
@@ -2573,36 +2604,23 @@ function editarEstudo(estudoId) {
   if (!estudo) return;
   
   // Preencher o formulário com os dados existentes
-  document.getElementById("nome-estudo").value = estudo.nome;
-  document.getElementById("endereco-estudo").value = estudo.endereco || "";
-  document.getElementById("telefone-estudo").value = estudo.telefone || "";
-  document.getElementById("dia-hora-estudo").value = estudo.diaHora || "";
+  document.getElementById("estudo-nome").value = estudo.nome;
+  document.getElementById("estudo-endereco").value = estudo.endereco || "";
+  document.getElementById("estudo-telefone").value = estudo.telefone || "";
+  document.getElementById("estudo-diahora").value = estudo.diaHora || "";
   
   // Abrir o modal
   openModal("modal-add-estudo");
   
-  // Substituir o comportamento do formulário para atualizar ao invés de criar
+  // Marcar que estamos editando
   const form = document.getElementById("form-add-estudo");
-  const novoForm = form.cloneNode(true);
-  form.parentNode.replaceChild(novoForm, form);
+  form.dataset.editingId = estudoId;
   
-  novoForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    
-    // Atualizar os dados do estudo
-    estudo.nome = document.getElementById("nome-estudo").value.trim();
-    estudo.endereco = document.getElementById("endereco-estudo").value.trim();
-    estudo.telefone = document.getElementById("telefone-estudo").value.trim();
-    estudo.diaHora = document.getElementById("dia-hora-estudo").value.trim();
-    
-    saveState();
-    renderEstudos();
-    closeModal("modal-add-estudo");
-    showToast("Estudo atualizado com sucesso!", "success");
-    
-    // Restaurar o comportamento original do formulário
-    location.reload();
-  });
+  // Alterar texto do botão
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.textContent = "Atualizar";
+  }
 }
 
 // Excluir estudo
