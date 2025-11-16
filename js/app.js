@@ -690,7 +690,7 @@ function initTimerModal() {
     
     // Se há pessoas no timer, perguntar sobre contato antes de prosseguir
     if (pessoasTimer.length > 0) {
-      perguntarContatoPessoas(pessoasTimer, (pessoasContatadas) => {
+      perguntarContatoPessoas(pessoasTimer, (pessoasContatadas, pessoasNaoContatadas) => {
         // Atualizar histórico das pessoas contatadas
         const dataHoje = todayISO();
         pessoasContatadas.forEach(pessoa => {
@@ -717,9 +717,47 @@ function initTimerModal() {
           }
         });
         
+        // Ajustar modalidades: remover revisitas/estudos não contatados
+        let modalidadesAjustadas = [...modalidadesArray];
+        let obsAjustada = obs;
+        
+        if (pessoasNaoContatadas.length > 0) {
+          // Remover "Revisitas" se havia revisita mas não foi contatada
+          const temRevisitaNaoContatada = pessoasNaoContatadas.some(p => p.tipo === 'revisita');
+          const todasRevisitasNaoContatadas = pessoasTimer.filter(p => p.tipo === 'revisita')
+            .every(p => pessoasNaoContatadas.some(nc => nc.id === p.id));
+          
+          if (temRevisitaNaoContatada && todasRevisitasNaoContatadas) {
+            modalidadesAjustadas = modalidadesAjustadas.filter(m => m !== 'Revisitas');
+          }
+          
+          // Remover "Estudo Bíblico" se havia estudo mas não foi contatado
+          const temEstudoNaoContatado = pessoasNaoContatadas.some(p => p.tipo === 'estudo');
+          const todosEstudosNaoContatados = pessoasTimer.filter(p => p.tipo === 'estudo')
+            .every(p => pessoasNaoContatadas.some(nc => nc.id === p.id));
+          
+          if (temEstudoNaoContatado && todosEstudosNaoContatados) {
+            modalidadesAjustadas = modalidadesAjustadas.filter(m => m !== 'Estudo Bíblico');
+          }
+          
+          // Adicionar "Campo" se não estiver na lista
+          if (!modalidadesAjustadas.includes('Campo')) {
+            modalidadesAjustadas.unshift('Campo');
+          }
+          
+          // Atualizar observação
+          const naoContatados = pessoasNaoContatadas.map(p => 
+            `${p.tipo === 'revisita' ? 'Revisita' : 'Estudo'}: ${p.nome} (não encontrado)`
+          ).join(', ');
+          obsAjustada += ` | Tentativa sem sucesso: ${naoContatados}`;
+        }
+        
+        const modalidadesTextoFinal = modalidadesAjustadas.join(", ");
+        const numModalidadesFinal = modalidadesAjustadas.length;
+        
         // Agora abrir modal de informações adicionais
         abrirInfoAdicional((infoAdicional) => {
-          finalizarTimer(user, horas, minutos, modalidadesTexto, obs, infoAdicional, numModalidades);
+          finalizarTimer(user, horas, minutos, modalidadesTextoFinal, obsAjustada, infoAdicional, numModalidadesFinal);
         });
       });
     } else {
@@ -765,11 +803,12 @@ function finalizarTimer(user, horas, minutos, modalidadesTexto, obs, infoAdicion
 // Perguntar sobre contato com as pessoas do timer
 function perguntarContatoPessoas(pessoas, callback) {
   const pessoasContatadas = [];
+  const pessoasNaoContatadas = [];
   let index = 0;
   
   function perguntarProxima() {
     if (index >= pessoas.length) {
-      callback(pessoasContatadas);
+      callback(pessoasContatadas, pessoasNaoContatadas);
       return;
     }
     
@@ -777,8 +816,10 @@ function perguntarContatoPessoas(pessoas, callback) {
     const tipoPessoa = pessoa.tipo === 'revisita' ? 'revisita' : 'estudo bíblico';
     const icone = pessoa.tipo === 'revisita' ? '📍' : '📖';
     
-    if (confirm(`${icone} Conseguiu contatar ${pessoa.nome} (${tipoPessoa})?`)) {
+    if (confirm(`${icone} Conseguiu contatar ${pessoa.nome} (${tipoPessoa})?\n\nClique OK para SIM ou Cancelar para NÃO`)) {
       pessoasContatadas.push(pessoa);
+    } else {
+      pessoasNaoContatadas.push(pessoa);
     }
     
     index++;
