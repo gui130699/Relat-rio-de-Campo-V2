@@ -3085,11 +3085,19 @@ function initBottomNav() {
   const btnHeaderConfig = document.getElementById("btn-header-config");
   
   if (btnHeaderAjuda) {
-    btnHeaderAjuda.addEventListener("click", () => showView("ajuda"));
+    btnHeaderAjuda.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showView("ajuda");
+    });
   }
   
   if (btnHeaderConfig) {
-    btnHeaderConfig.addEventListener("click", () => showView("config"));
+    btnHeaderConfig.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showView("config");
+    });
   }
 }
 
