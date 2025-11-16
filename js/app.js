@@ -676,38 +676,108 @@ function initTimerModal() {
       obs += ` | ${nomesP.join(", ")}`;
     }
     
-    // Abrir modal de informações adicionais
+    // Fechar modal do cronômetro
     closeModal("modal-cronometro");
-    abrirInfoAdicional((infoAdicional) => {
-      state.entries.push({
-        id: uuid(),
-        userId: user.id,
-        data: todayISO(),
-        horas,
-        minutos,
-        modalidade: modalidadesTexto,
-        obs,
-        publicacoes: infoAdicional.publicacoes,
-        revisitasAbertas: infoAdicional.revisitasAbertas,
-        cartas: infoAdicional.cartas
+    
+    // Se há pessoas no timer, perguntar sobre contato antes de prosseguir
+    if (pessoasTimer.length > 0) {
+      perguntarContatoPessoas(pessoasTimer, (pessoasContatadas) => {
+        // Atualizar histórico das pessoas contatadas
+        const dataHoje = todayISO();
+        pessoasContatadas.forEach(pessoa => {
+          if (pessoa.tipo === 'revisita') {
+            const revisita = state.revisitas.find(r => r.id === pessoa.id);
+            if (revisita) {
+              if (!revisita.historico) revisita.historico = [];
+              revisita.historico.push({
+                data: dataHoje,
+                obs: `Timer: ${horas}h${minutos}min`
+              });
+              revisita.ultimoContato = dataHoje;
+            }
+          } else if (pessoa.tipo === 'estudo') {
+            const estudo = state.estudos.find(e => e.id === pessoa.id);
+            if (estudo) {
+              if (!estudo.historico) estudo.historico = [];
+              estudo.historico.push({
+                data: dataHoje,
+                obs: `Timer: ${horas}h${minutos}min`
+              });
+              estudo.ultimoContato = dataHoje;
+            }
+          }
+        });
+        
+        // Agora abrir modal de informações adicionais
+        abrirInfoAdicional((infoAdicional) => {
+          finalizarTimer(user, horas, minutos, modalidadesTexto, obs, infoAdicional, numModalidades);
+        });
       });
-      
-      // Limpar timer
-      state.timerState = null;
-      stopCronometro();
-      saveState();
-      
-      // Restaurar título do header
-      const headerTitle = document.getElementById("header-title");
-      if (headerTitle) {
-        headerTitle.textContent = "Relatório de Campo";
-      }
-      
-      showToast(`Serviço registrado: ${horas}h ${minutos}min em ${numModalidades} modalidade(s).`, "success");
-      renderDashboard();
-      checkTimerStatus();
-    });
+    } else {
+      // Sem pessoas, ir direto para informações adicionais
+      abrirInfoAdicional((infoAdicional) => {
+        finalizarTimer(user, horas, minutos, modalidadesTexto, obs, infoAdicional, numModalidades);
+      });
+    }
   });
+}
+
+// Função auxiliar para finalizar o timer
+function finalizarTimer(user, horas, minutos, modalidadesTexto, obs, infoAdicional, numModalidades) {
+  state.entries.push({
+    id: uuid(),
+    userId: user.id,
+    data: todayISO(),
+    horas,
+    minutos,
+    modalidade: modalidadesTexto,
+    obs,
+    publicacoes: infoAdicional.publicacoes,
+    revisitasAbertas: infoAdicional.revisitasAbertas,
+    cartas: infoAdicional.cartas
+  });
+  
+  // Limpar timer
+  state.timerState = null;
+  stopCronometro();
+  saveState();
+  
+  // Restaurar título do header
+  const headerTitle = document.getElementById("header-title");
+  if (headerTitle) {
+    headerTitle.textContent = "Relatório de Campo";
+  }
+  
+  showToast(`Serviço registrado: ${horas}h ${minutos}min em ${numModalidades} modalidade(s).`, "success");
+  renderDashboard();
+  checkTimerStatus();
+}
+
+// Perguntar sobre contato com as pessoas do timer
+function perguntarContatoPessoas(pessoas, callback) {
+  const pessoasContatadas = [];
+  let index = 0;
+  
+  function perguntarProxima() {
+    if (index >= pessoas.length) {
+      callback(pessoasContatadas);
+      return;
+    }
+    
+    const pessoa = pessoas[index];
+    const tipoPessoa = pessoa.tipo === 'revisita' ? 'revisita' : 'estudo bíblico';
+    const icone = pessoa.tipo === 'revisita' ? '📍' : '📖';
+    
+    if (confirm(`${icone} Conseguiu contatar ${pessoa.nome} (${tipoPessoa})?`)) {
+      pessoasContatadas.push(pessoa);
+    }
+    
+    index++;
+    perguntarProxima();
+  }
+  
+  perguntarProxima();
+}
 }
 
 function startCronometro() {
@@ -986,6 +1056,30 @@ function initLancamentoForm() {
       obsCompleta = `${pessoaNome}${obs ? ': ' + obs : ''}`;
     }
 
+    // Se for revisita ou estudo, registrar contato no histórico
+    const pessoaId = pessoaIdInput.value;
+    if (pessoaId && modalidade === "Revisitas") {
+      const revisita = state.revisitas.find(r => r.id === pessoaId);
+      if (revisita) {
+        if (!revisita.historico) revisita.historico = [];
+        revisita.historico.push({
+          data: data,
+          obs: obs || `Lançamento: ${horas}h${minutos}min`
+        });
+        revisita.ultimoContato = data;
+      }
+    } else if (pessoaId && modalidade === "Estudo Bíblico") {
+      const estudo = state.estudos.find(e => e.id === pessoaId);
+      if (estudo) {
+        if (!estudo.historico) estudo.historico = [];
+        estudo.historico.push({
+          data: data,
+          obs: obs || `Lançamento: ${horas}h${minutos}min`
+        });
+        estudo.ultimoContato = data;
+      }
+    }
+    
     // Abrir modal de informações adicionais
     abrirInfoAdicional((infoAdicional) => {
       state.entries.push({
