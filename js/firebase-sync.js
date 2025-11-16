@@ -128,3 +128,9 @@ function enableAutoSync(userId) {
     syncToFirebase(userId).catch(err => console.error('Erro na sync automática:', err));
   };
 }
+
+// Exportar funções para o escopo global
+window.waitForFirebase = waitForFirebase;
+window.syncToFirebase = syncToFirebase;
+window.loadFromFirebase = loadFromFirebase;
+window.enableAutoSync = enableAutoSync;
