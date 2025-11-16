@@ -2425,35 +2425,6 @@ function initConfigForm() {
     renderDashboard();
   });
 
-  // Sincronização Firebase
-  const btnSync = document.getElementById("btn-sync-firebase");
-  const syncStatus = document.getElementById("sync-status");
-  
-  btnSync.addEventListener("click", async () => {
-    const user = getCurrentUser();
-    if (!user) return;
-    
-    btnSync.disabled = true;
-    btnSync.textContent = "⏳ Sincronizando...";
-    syncStatus.textContent = "";
-    
-    try {
-      const success = await syncToFirebase(user.id);
-      if (success) {
-        showToast("Dados sincronizados com sucesso!", "success");
-        syncStatus.textContent = `✅ Última sincronização: ${new Date().toLocaleString('pt-BR')}`;
-      } else {
-        showToast("Erro ao sincronizar. Tente novamente.", "error");
-      }
-    } catch (error) {
-      showToast("Erro ao sincronizar com Firebase.", "error");
-      console.error(error);
-    } finally {
-      btnSync.disabled = false;
-      btnSync.textContent = "☁️ Sincronizar agora";
-    }
-  });
-
   // Logout
   const btnLogout = document.getElementById("btn-logout");
   btnLogout.addEventListener("click", async () => {
@@ -2476,15 +2447,6 @@ function initConfigForm() {
       }
     }
   });
-
-  // Backup e restauração
-  const btnExport = document.getElementById("btn-export-data");
-  const btnImport = document.getElementById("btn-import-data");
-  const fileImport = document.getElementById("file-import-data");
-
-  btnExport.addEventListener("click", exportarDados);
-  btnImport.addEventListener("click", () => fileImport.click());
-  fileImport.addEventListener("change", importarDados);
 
   // Gerenciar anciãos
   initGerenciarAnciaos();
@@ -2576,49 +2538,6 @@ function renderAnciaos() {
     li.appendChild(btnDel);
     lista.appendChild(li);
   });
-}
-
-function exportarDados() {
-  const dataStr = JSON.stringify(state, null, 2);
-  const dataBlob = new Blob([dataStr], { type: "application/json" });
-  const url = URL.createObjectURL(dataBlob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `relatorio-campo-backup-${new Date().toISOString().split('T')[0]}.json`;
-  link.click();
-  URL.revokeObjectURL(url);
-  showToast("Backup exportado com sucesso!", "success");
-}
-
-function importarDados(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    try {
-      const importedState = JSON.parse(event.target.result);
-      
-      // Validar estrutura básica
-      if (!importedState.users || !Array.isArray(importedState.users)) {
-        throw new Error("Arquivo de backup inválido");
-      }
-
-      // Confirmar importação
-      if (confirm(`Importar backup? Isso irá SOBRESCREVER todos os dados atuais.\n\nUsuários no backup: ${importedState.users.length}`)) {
-        state = importedState;
-        saveState();
-        showToast("Dados importados com sucesso! Recarregando...", "success");
-        setTimeout(() => location.reload(), 1500);
-      }
-    } catch (error) {
-      showToast("Erro ao importar backup: " + error.message, "error", 5000);
-    }
-  };
-  reader.readAsText(file);
-  
-  // Limpar input para permitir reimportação do mesmo arquivo
-  e.target.value = "";
 }
 
 // ------------- Relatório ----------------
