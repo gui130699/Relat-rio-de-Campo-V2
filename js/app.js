@@ -597,14 +597,21 @@ function initTimerModal() {
       state.timerState.pause = false;
       delete state.timerState.pauseStart;
       btnPauseTimer.textContent = "Pausar";
+      
+      // Reiniciar o cronômetro visual no dashboard
+      checkTimerStatus();
     } else {
       // Pausar
       state.timerState.pause = true;
       state.timerState.pauseStart = new Date().toISOString();
       btnPauseTimer.textContent = "Retomar";
+      
+      // Atualizar display no dashboard
+      checkTimerStatus();
     }
     
     saveState();
+    updateCronometroDisplay();
   });
   
   btnStopTimer.addEventListener("click", () => {
@@ -661,8 +668,15 @@ function initTimerModal() {
       stopCronometro();
       saveState();
       
+      // Restaurar título do header
+      const headerTitle = document.getElementById("header-title");
+      if (headerTitle) {
+        headerTitle.textContent = "Relatório de Campo";
+      }
+      
       showToast(`Serviço registrado: ${horas}h ${minutos}min em ${numModalidades} modalidade(s).`, "success");
       renderDashboard();
+      checkTimerStatus();
     });
   });
 }
@@ -681,6 +695,12 @@ function stopCronometro() {
   if (timerInterval) {
     clearInterval(timerInterval);
     timerInterval = null;
+  }
+  
+  // Restaurar título do header quando parar o cronômetro
+  const headerTitle = document.getElementById("header-title");
+  if (headerTitle && !state.timerState) {
+    headerTitle.textContent = "Relatório de Campo";
   }
 }
 
@@ -706,6 +726,7 @@ function updateCronometroDisplay() {
   const cronometroInicio = document.getElementById("cronometro-inicio");
   const cronometroModalidades = document.getElementById("cronometro-modalidades");
   const btnPause = document.getElementById("btn-pause-timer");
+  const headerTitle = document.getElementById("header-title");
   
   if (cronometroTempo) {
     cronometroTempo.textContent = display;
@@ -719,6 +740,15 @@ function updateCronometroDisplay() {
   if (cronometroInicio) cronometroInicio.textContent = `Início: ${formatDateTime(start)}`;
   if (cronometroModalidades) cronometroModalidades.textContent = `Modalidades: ${state.timerState.modalidades.join(", ")}`;
   if (btnPause) btnPause.textContent = state.timerState.pause ? "Retomar" : "Pausar";
+  
+  // Atualizar header com o timer
+  if (headerTitle) {
+    if (state.timerState.pause) {
+      headerTitle.innerHTML = `⏸️ ${display} <span style="font-size: 12px; opacity: 0.7;">(pausado)</span>`;
+    } else {
+      headerTitle.innerHTML = `⏱️ ${display}`;
+    }
+  }
   
   // Notificação a cada hora (somente se não estiver pausado)
   if (!state.timerState.pause && minutes === 0 && seconds === 0 && hours > 0) {
@@ -744,8 +774,55 @@ function checkTimerStatus() {
   if (state.timerState && state.timerState.userId === user.id) {
     startCronometro();
     const status = document.getElementById("timer-status");
+    const btnStartTimer = document.getElementById("btn-start-timer");
+    
     if (status) {
-      status.textContent = "⏱️ Timer ativo - Clique em 'Iniciar serviço' para gerenciar";
+      // Calcular tempo atual
+      const start = new Date(state.timerState.start);
+      const now = new Date();
+      const pausedTime = state.timerState.pausedTime || 0;
+      const elapsed = state.timerState.pause 
+        ? (new Date(state.timerState.pauseStart).getTime() - start.getTime() - pausedTime)
+        : (now.getTime() - start.getTime() - pausedTime);
+      
+      const totalSeconds = Math.floor(elapsed / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      
+      const display = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      
+      status.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--primary-color); color: white; border-radius: 8px; margin-top: 8px;">
+          <span style="font-size: 24px;">${state.timerState.pause ? '⏸️' : '⏱️'}</span>
+          <div style="flex: 1;">
+            <div style="font-size: 20px; font-weight: bold; font-family: monospace;">${display}</div>
+            <div style="font-size: 12px; opacity: 0.9;">${state.timerState.pause ? 'Pausado' : 'Serviço em andamento'}</div>
+          </div>
+        </div>
+      `;
+      
+      // Atualizar a cada segundo para manter o display atualizado
+      if (!state.timerState.pause) {
+        setTimeout(checkTimerStatus, 1000);
+      }
+    }
+    
+    if (btnStartTimer) {
+      btnStartTimer.textContent = "⏱️ Gerenciar timer";
+      btnStartTimer.onclick = () => openModal("modal-cronometro");
+    }
+  } else {
+    const status = document.getElementById("timer-status");
+    const btnStartTimer = document.getElementById("btn-start-timer");
+    
+    if (status) {
+      status.innerHTML = "";
+    }
+    
+    if (btnStartTimer) {
+      btnStartTimer.textContent = "Iniciar serviço (timer)";
+      btnStartTimer.onclick = () => openModal("modal-timer");
     }
   }
 }
