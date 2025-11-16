@@ -677,7 +677,10 @@ function initTimerModal() {
   }
   
   // Abrir modal de seleção de modalidades
-  btnStartTimer.addEventListener("click", () => {
+  btnStartTimer.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     const user = getCurrentUser();
     if (!user) return;
     
@@ -1220,7 +1223,7 @@ function checkTimerStatus() {
     
     if (btnStartTimer) {
       btnStartTimer.textContent = "⏱️ Gerenciar timer";
-      btnStartTimer.onclick = () => openModal("modal-cronometro");
+      btnStartTimer.classList.add("timer-active");
     }
   } else {
     const status = document.getElementById("timer-status");
@@ -1231,8 +1234,8 @@ function checkTimerStatus() {
     }
     
     if (btnStartTimer) {
-      btnStartTimer.textContent = "Iniciar serviço (timer)";
-      btnStartTimer.onclick = () => openModal("modal-timer");
+      btnStartTimer.textContent = "⏱️ Iniciar Cronômetro";
+      btnStartTimer.classList.remove("timer-active");
     }
   }
 }

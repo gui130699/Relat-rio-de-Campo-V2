@@ -307,6 +307,26 @@ textarea:focus {
   transform: translateY(-1px);
 }
 
+.btn-secondary.timer-active {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: white;
+  font-weight: 700;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.btn-secondary.timer-active:hover {
+  background: linear-gradient(135deg, #059669, #10b981);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+}
+
 .btn-full {
   width: 100%;
 }
