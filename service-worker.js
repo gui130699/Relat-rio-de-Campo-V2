@@ -1,4 +1,4 @@
-const CACHE_NAME = "relatorio-campo-cache-v20";
+const CACHE_NAME = "relatorio-campo-cache-v21";
 const ASSETS = [
   "./",
   "./index.html",
