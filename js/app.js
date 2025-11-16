@@ -667,15 +667,8 @@ function initAuth() {
 // ------------- Modalidades ----------------
 
 function populateModalidades() {
-  const sel = document.getElementById("lan-modalidade");
-  if (!sel) return;
-  sel.innerHTML = "";
-  state.modalidades.forEach(m => {
-    const opt = document.createElement("option");
-    opt.value = m;
-    opt.textContent = m;
-    sel.appendChild(opt);
-  });
+  // Função mantida para compatibilidade - checkboxes são renderizados em initLancamentoForm
+  return;
 }
 
 // ------------- TIMER / CRONÔMETRO ----------------
@@ -1264,82 +1257,89 @@ function checkTimerStatus() {
 
 // ------------- Lançamentos ----------------
 
+let pessoasSelecionadasLancamento = {}; // { modalidade: { id, nome } }
+
 function initLancamentoView() {
   document.getElementById("lan-data").value = todayISO();
+  renderModalidadesLancamento();
+}
+
+function renderModalidadesLancamento() {
+  const modalidadesList = document.getElementById("lan-modalidades-list");
+  if (!modalidadesList) return;
+  
+  modalidadesList.innerHTML = "";
+  
+  state.modalidades.forEach(mod => {
+    const div = document.createElement("div");
+    div.className = "checkbox-item";
+    
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = `lan-mod-${mod}`;
+    checkbox.value = mod;
+    
+    const label = document.createElement("label");
+    label.setAttribute("for", `lan-mod-${mod}`);
+    label.textContent = mod;
+    
+    div.appendChild(checkbox);
+    div.appendChild(label);
+    
+    // Click handler para seleção de pessoa
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        if (mod === "Revisitas") {
+          abrirSelecaoRevisita((revisita) => {
+            pessoasSelecionadasLancamento[mod] = { id: revisita.id, nome: revisita.nome };
+            atualizarPessoaInfoLancamento();
+          }, false);
+        } else if (mod === "Estudo Bíblico") {
+          abrirSelecaoEstudo((estudo) => {
+            pessoasSelecionadasLancamento[mod] = { id: estudo.id, nome: estudo.nome };
+            atualizarPessoaInfoLancamento();
+          }, false);
+        }
+      } else {
+        delete pessoasSelecionadasLancamento[mod];
+        atualizarPessoaInfoLancamento();
+      }
+    });
+    
+    div.addEventListener("click", (e) => {
+      if (e.target !== checkbox) {
+        checkbox.checked = !checkbox.checked;
+        checkbox.dispatchEvent(new Event("change"));
+      }
+    });
+    
+    modalidadesList.appendChild(div);
+  });
+}
+
+function atualizarPessoaInfoLancamento() {
+  const pessoaInfo = document.getElementById("lan-pessoa-info");
+  if (!pessoaInfo) return;
+  
+  const pessoas = Object.entries(pessoasSelecionadasLancamento).map(([mod, pessoa]) => {
+    const icon = mod === "Revisitas" ? "📍" : "📖";
+    return `${icon} ${pessoa.nome}`;
+  });
+  
+  if (pessoas.length > 0) {
+    pessoaInfo.textContent = pessoas.join(" | ");
+    pessoaInfo.style.display = "block";
+  } else {
+    pessoaInfo.style.display = "none";
+  }
 }
 
 function initLancamentoForm() {
   const form = document.getElementById("form-lancamento");
-  const modalidadesList = document.getElementById("lan-modalidades-list");
-  const pessoaInfo = document.getElementById("lan-pessoa-info");
-  const pessoaIdInput = document.getElementById("lan-pessoa-id");
-  const pessoaNomeInput = document.getElementById("lan-pessoa-nome");
-  
-  let pessoasSelecionadas = {}; // { modalidade: { id, nome } }
 
   // Renderizar checkboxes de modalidades
   function renderModalidadesCheckboxes() {
-    modalidadesList.innerHTML = "";
-    
-    state.modalidades.forEach(mod => {
-      const div = document.createElement("div");
-      div.className = "checkbox-item";
-      
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.id = `lan-mod-${mod}`;
-      checkbox.value = mod;
-      
-      const label = document.createElement("label");
-      label.setAttribute("for", `lan-mod-${mod}`);
-      label.textContent = mod;
-      
-      div.appendChild(checkbox);
-      div.appendChild(label);
-      
-      // Click handler para seleção de pessoa
-      checkbox.addEventListener("change", () => {
-        if (checkbox.checked) {
-          if (mod === "Revisitas") {
-            abrirSelecaoRevisita((revisita) => {
-              pessoasSelecionadas[mod] = { id: revisita.id, nome: revisita.nome };
-              atualizarPessoaInfo();
-            }, false);
-          } else if (mod === "Estudo Bíblico") {
-            abrirSelecaoEstudo((estudo) => {
-              pessoasSelecionadas[mod] = { id: estudo.id, nome: estudo.nome };
-              atualizarPessoaInfo();
-            }, false);
-          }
-        } else {
-          delete pessoasSelecionadas[mod];
-          atualizarPessoaInfo();
-        }
-      });
-      
-      div.addEventListener("click", (e) => {
-        if (e.target !== checkbox) {
-          checkbox.checked = !checkbox.checked;
-          checkbox.dispatchEvent(new Event("change"));
-        }
-      });
-      
-      modalidadesList.appendChild(div);
-    });
-  }
-  
-  function atualizarPessoaInfo() {
-    const pessoas = Object.entries(pessoasSelecionadas).map(([mod, pessoa]) => {
-      const icon = mod === "Revisitas" ? "📍" : "📖";
-      return `${icon} ${pessoa.nome}`;
-    });
-    
-    if (pessoas.length > 0) {
-      pessoaInfo.textContent = pessoas.join(" | ");
-      pessoaInfo.style.display = "block";
-    } else {
-      pessoaInfo.style.display = "none";
-    }
+    renderModalidadesLancamento();
   }
   
   renderModalidadesCheckboxes();
@@ -1367,13 +1367,13 @@ function initLancamentoForm() {
 
     // Adicionar nomes das pessoas na observação
     let obsCompleta = obs;
-    const pessoasNomes = Object.values(pessoasSelecionadas).map(p => p.nome);
+    const pessoasNomes = Object.values(pessoasSelecionadasLancamento).map(p => p.nome);
     if (pessoasNomes.length > 0) {
       obsCompleta = `${pessoasNomes.join(", ")}${obs ? ': ' + obs : ''}`;
     }
 
     // Registrar contatos no histórico
-    Object.entries(pessoasSelecionadas).forEach(([modalidade, pessoa]) => {
+    Object.entries(pessoasSelecionadasLancamento).forEach(([modalidade, pessoa]) => {
       if (modalidade === "Revisitas") {
         const revisita = state.revisitas.find(r => r.id === pessoa.id);
         if (revisita) {
@@ -1414,7 +1414,7 @@ function initLancamentoForm() {
       saveState();
       form.reset();
       renderModalidadesCheckboxes();
-      pessoasSelecionadas = {};
+      pessoasSelecionadasLancamento = {};
       document.getElementById("lan-data").value = todayISO();
       pessoaInfo.style.display = "none";
       showToast("Lançamento salvo.", "success");
