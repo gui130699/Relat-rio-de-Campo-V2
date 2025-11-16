@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relatório de Campo</title>
+
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#432874" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <div id="app">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="app-title">
+        <span class="logo-dot"></span>
+        <span id="header-title">Relatório de Campo</span>
+      </div>
+      <div class="header-actions">
+        <button id="btn-install-app" class="btn-install" title="Instalar aplicativo" style="display: none;">
+          📱 Instalar
+        </button>
+        <button id="btn-theme-toggle" class="icon-button" title="Tema claro/escuro">🌓</button>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main id="app-main">
+      <!-- VIEW: LOGIN -->
+      <section class="view active" data-view="login">
+        <div class="card card-centered">
+          <h1 class="title">Bem-vindo</h1>
+          <p class="subtitle">Controle seu relatório de campo de forma simples.</p>
+
+          <div class="tabs tabs-auth">
+            <button class="tab-button active" data-auth-tab="login">Entrar</button>
+            <button class="tab-button" data-auth-tab="signup">Criar conta</button>
+          </div>
+
+          <!-- Login -->
+          <form id="form-login" class="form form-auth">
+            <label>
+              E-mail
+              <input type="email" id="login-email" required />
+            </label>
+            <label>
+              Senha
+              <input type="password" id="login-password" required />
+            </label>
+            <button type="submit" class="btn-primary">Entrar</button>
+          </form>
+
+          <!-- Cadastro -->
+          <form id="form-signup" class="form form-auth hidden">
+            <label>
+              Nome
+              <input type="text" id="signup-nome" required />
+            </label>
+            <label>
+              Congregação
+              <input type="text" id="signup-congregacao" required />
+            </label>
+            <label>
+              Tipo de serviço
+              <select id="signup-tipo" required>
+                <option value="publicador">Publicador</option>
+                <option value="auxiliar">Pioneiro Auxiliar</option>
+                <option value="regular">Pioneiro Regular</option>
+              </select>
+            </label>
+            <label>
+              E-mail
+              <input type="email" id="signup-email" required />
+            </label>
+            <label>
+              Senha
+              <input type="password" id="signup-password" required />
+            </label>
+            <button type="submit" class="btn-primary">Criar conta</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- VIEW: DASHBOARD -->
+      <section class="view" data-view="dashboard">
+        <div class="card card-top">
+          <h2>Resumo do mês</h2>
+          <p id="dashboard-mes"></p>
+          <div class="grid grid-3">
+            <div class="stat">
+              <span class="stat-label">Horas</span>
+              <span class="stat-value" id="stat-horas">0h</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Meta</span>
+              <span class="stat-value" id="stat-meta">–</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">% Progresso</span>
+              <span class="stat-value" id="stat-progresso">0%</span>
+            </div>
+          </div>
+          <p id="dashboard-comparativo" class="text-muted small"></p>
+        </div>
+
+        <div class="card">
+          <h3>Ações rápidas</h3>
+          <div class="grid grid-2">
+            <button class="btn-secondary" id="btn-open-add-entry">Adicionar lançamento</button>
+            <button class="btn-secondary" id="btn-start-timer">Iniciar serviço (timer)</button>
+            <button class="btn-secondary" id="btn-registrar-revisita">Registrar revisita</button>
+            <button class="btn-secondary" id="btn-registrar-estudo">Registrar estudo</button>
+            <button class="btn-secondary" id="btn-configurar-meta">⚙️ Configurar meta</button>
+            <button class="btn-secondary" id="btn-encerrar-meta" style="display: none;">🏁 Encerrar meta</button>
+          </div>
+          <p id="timer-status" class="text-muted small"></p>
+          <p id="meta-status" class="text-muted small"></p>
+        </div>
+
+        <div class="card">
+          <div class="card-header-collapsible collapsed" id="toggle-lancamentos">
+            <h3>Lançamentos</h3>
+            <span class="collapse-icon">▼</span>
+          </div>
+          <div id="lista-lancamentos" class="collapsible-content collapsed"></div>
+        </div>
+      </section>
+
+      <!-- VIEW: LANÇAMENTO -->
+      <section class="view" data-view="lancamento">
+        <div class="card card-top">
+          <h2>Novo lançamento</h2>
+          <form id="form-lancamento" class="form">
+            <label>
+              Data
+              <input type="date" id="lan-data" required />
+            </label>
+            <div class="grid grid-2">
+              <label>
+                Horas
+                <input type="number" id="lan-horas" min="0" value="0" required />
+              </label>
+              <label>
+                Minutos
+                <input type="number" id="lan-minutos" min="0" max="59" value="0" required />
+              </label>
+            </div>
+            <label>
+              Modalidade
+              <select id="lan-modalidade" required></select>
+            </label>
+            <div id="lan-pessoa-info" class="text-muted small" style="margin: -8px 0 8px 0; display: none;"></div>
+            <label>
+              Observações
+              <textarea id="lan-obs" rows="2" placeholder="Anotações (opcional)"></textarea>
+            </label>
+            <input type="hidden" id="lan-pessoa-id" />
+            <input type="hidden" id="lan-pessoa-nome" />
+            <button type="submit" class="btn-primary">Salvar lançamento</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- VIEW: REVISITAS -->
+      <section class="view" data-view="revisitas">
+        <div class="card card-top">
+          <h2>Revisitas</h2>
+          <button id="btn-add-revisita" class="btn-primary btn-full">Adicionar revisita</button>
+        </div>
+        <div class="card">
+          <ul id="lista-revisitas" class="list-simple"></ul>
+        </div>
+      </section>
+
+      <!-- VIEW: ESTUDOS -->
+      <section class="view" data-view="estudos">
+        <div class="card card-top">
+          <h2>Estudos bíblicos</h2>
+          <button id="btn-add-estudo" class="btn-primary btn-full">Adicionar estudo</button>
+        </div>
+        <div class="card">
+          <ul id="lista-estudos" class="list-simple"></ul>
+        </div>
+      </section>
+
+      <!-- VIEW: METAS -->
+      <section class="view" data-view="metas">
+        <div class="card card-top">
+          <h2>Metas de serviço</h2>
+          <p id="metas-tipo"></p>
+          <form id="form-metas" class="form">
+            <div id="metas-publicador" class="metas-bloco">
+              <label>
+                Meta mensal (opcional, em horas)
+                <input type="number" id="meta-pub-mensal" min="0" />
+              </label>
+            </div>
+
+            <div id="metas-auxiliar" class="metas-bloco">
+              <label>
+                Meta deste mês (horas)
+                <input type="number" id="meta-aux-mensal" min="0" />
+              </label>
+            </div>
+
+            <div id="metas-regular" class="metas-bloco">
+              <label>
+                Tipo de meta
+                <select id="meta-reg-tipo">
+                  <option value="mensal">Mensal</option>
+                  <option value="anual">Anual</option>
+                </select>
+              </label>
+              <label id="lbl-meta-reg-mensal">
+                Meta mensal (horas)
+                <input type="number" id="meta-reg-mensal" min="0" />
+              </label>
+              <label id="lbl-meta-reg-anual" class="hidden">
+                Meta anual (horas)
+                <input type="number" id="meta-reg-anual" min="0" />
+              </label>
+            </div>
+
+            <button type="submit" class="btn-primary">Salvar metas</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- VIEW: RELATÓRIO -->
+      <section class="view" data-view="relatorio">
+        <div class="card card-top">
+          <h2>Relatório do mês</h2>
+          <form id="form-relatorio" class="form">
+            <div class="grid grid-2">
+              <label>
+                Mês
+                <select id="rel-mes" required>
+                  <option value="1">Janeiro</option>
+                  <option value="2">Fevereiro</option>
+                  <option value="3">Março</option>
+                  <option value="4">Abril</option>
+                  <option value="5">Maio</option>
+                  <option value="6">Junho</option>
+                  <option value="7">Julho</option>
+                  <option value="8">Agosto</option>
+                  <option value="9">Setembro</option>
+                  <option value="10">Outubro</option>
+                  <option value="11">Novembro</option>
+                  <option value="12">Dezembro</option>
+                </select>
+              </label>
+              <label>
+                Ano
+                <select id="rel-ano" required></select>
+              </label>
+            </div>
+            <button type="button" id="btn-gerar-relatorio" class="btn-secondary">Gerar</button>
+          </form>
+        </div>
+
+        <div class="card hidden" id="relatorio-resultado">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <h3 style="margin: 0;">Dados do relatório</h3>
+            <button type="button" id="btn-alterar-mes" class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;">📅 Alterar mês</button>
+          </div>
+          <pre id="relatorio-preview" class="rel-preview"></pre>
+          <div class="grid grid-2">
+            <button id="btn-enviar-whatsapp" class="btn-primary">📱 WhatsApp Pessoal</button>
+            <button id="btn-enviar-relatorio-anciao" class="btn-primary">📤 Enviar ao Ancião</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: CONFIGURAÇÕES -->
+      <section class="view" data-view="config">
+        <div class="card card-top">
+          <h2>Configurações</h2>
+          <form id="form-config" class="form">
+            <label>
+              Nome
+              <input type="text" id="cfg-nome" required />
+            </label>
+            <label>
+              Congregação
+              <input type="text" id="cfg-congregacao" required />
+            </label>
+            <label>
+              Tipo de serviço
+              <select id="cfg-tipo" required>
+                <option value="publicador">Publicador</option>
+                <option value="auxiliar">Pioneiro Auxiliar</option>
+                <option value="regular">Pioneiro Regular</option>
+              </select>
+            </label>
+            <button type="submit" class="btn-primary">Salvar configurações</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Anciãos</h3>
+          <p class="text-muted small">Gerencie os anciãos responsáveis por receber relatórios.</p>
+          <ul id="lista-anciaos" class="list-simple"></ul>
+          <button id="btn-add-anciao" class="btn-secondary" style="width: 100%; margin-top: 12px;">+ Adicionar ancião</button>
+        </div>
+
+        <div class="card">
+          <h3>Backup e Restauração</h3>
+          <p class="text-muted small">Faça backup dos seus dados para não perdê-los. Você pode restaurar em outro dispositivo.</p>
+          <div class="grid grid-2">
+            <button id="btn-export-data" class="btn-secondary">📥 Exportar dados</button>
+            <button id="btn-import-data" class="btn-secondary">📤 Importar dados</button>
+          </div>
+          <input type="file" id="file-import" accept=".json" style="display: none;" />
+        </div>
+
+        <div class="card">
+          <button id="btn-logout" class="btn-secondary" style="width: 100%;">🚪 Sair</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- NAV BOTTOM -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <button class="nav-button active" data-nav="dashboard">🏠<span>Início</span></button>
+      <button class="nav-button" data-nav="lancamento">🕒<span>Lançar</span></button>
+      <button class="nav-button" data-nav="revisitas">🔁<span>Revisitas</span></button>
+      <button class="nav-button" data-nav="estudos">📖<span>Estudos</span></button>
+      <button class="nav-button" data-nav="relatorio">📤<span>Relatório</span></button>
+      <button class="nav-button" data-nav="config">⚙️<span>Config</span></button>
+    </nav>
+
+    <!-- MODALS -->
+    <!-- Modal Timer Modalidades -->
+    <div id="modal-timer" class="modal hidden">
+      <div class="modal-content">
+        <h3>Selecione as modalidades</h3>
+        <p class="text-muted small">Você pode selecionar mais de uma modalidade</p>
+        <div id="modalidades-checkbox-list" class="checkbox-list"></div>
+        <div class="modal-actions">
+          <button id="btn-cancel-timer" class="btn-secondary">Cancelar</button>
+          <button id="btn-confirm-timer" class="btn-primary">Iniciar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Cronômetro Ativo -->
+    <div id="modal-cronometro" class="modal hidden">
+      <div class="modal-content">
+        <h3>Serviço em andamento</h3>
+        <div class="cronometro-display">
+          <div id="cronometro-tempo" class="cronometro-tempo">00:00:00</div>
+          <div class="cronometro-info">
+            <p class="text-muted small" id="cronometro-inicio"></p>
+            <p class="text-muted small" id="cronometro-modalidades"></p>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-pause-timer" class="btn-secondary">Pausar</button>
+          <button id="btn-stop-timer" class="btn-primary">Finalizar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Cadastrar Nova Revisita -->
+    <div id="modal-add-revisita" class="modal hidden">
+      <div class="modal-content">
+        <h3>Nova revisita</h3>
+        <form id="form-add-revisita" class="form">
+          <label>
+            Nome *
+            <input type="text" id="revisita-nome" required />
+          </label>
+          <label>
+            Endereço
+            <input type="text" id="revisita-endereco" />
+          </label>
+          <label>
+            Telefone
+            <input type="tel" id="revisita-telefone" />
+          </label>
+          <label>
+            Publicação deixada
+            <input type="text" id="revisita-publicacao" />
+          </label>
+          <label>
+            Assunto conversado
+            <textarea id="revisita-assunto" rows="3"></textarea>
+          </label>
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-add-revisita" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Adicionar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Registrar Revisita -->
+    <div id="modal-registrar-revisita" class="modal hidden">
+      <div class="modal-content">
+        <h3>Registrar revisita</h3>
+        <div id="lista-revisitas-select" class="select-list"></div>
+      </div>
+    </div>
+
+    <!-- Modal Observações Revisita -->
+    <div id="modal-obs-revisita" class="modal hidden">
+      <div class="modal-content">
+        <h3 id="modal-obs-titulo">Registrar visita</h3>
+        <form id="form-obs-revisita">
+          <label>
+            Data
+            <input type="date" id="obs-data" required />
+          </label>
+          <label>
+            Observações
+            <textarea id="obs-texto" rows="3" placeholder="Anotações sobre a visita..."></textarea>
+          </label>
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-obs-revisita" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Cadastrar Novo Estudo -->
+    <div id="modal-add-estudo" class="modal hidden">
+      <div class="modal-content">
+        <h3>Novo estudo bíblico</h3>
+        <form id="form-add-estudo" class="form">
+          <label>
+            Nome do estudante *
+            <input type="text" id="estudo-nome" required />
+          </label>
+          <label>
+            Endereço
+            <input type="text" id="estudo-endereco" />
+          </label>
+          <label>
+            Telefone
+            <input type="tel" id="estudo-telefone" />
+          </label>
+          <label>
+            Dia e horário
+            <input type="text" id="estudo-diahora" placeholder="Ex.: Sábado 15h" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-add-estudo" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Adicionar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Registrar Estudo -->
+    <div id="modal-registrar-estudo" class="modal hidden">
+      <div class="modal-content">
+        <h3>Registrar estudo</h3>
+        <div id="lista-estudos-select" class="select-list"></div>
+      </div>
+    </div>
+
+    <!-- Modal Observações Estudo -->
+    <div id="modal-obs-estudo" class="modal hidden">
+      <div class="modal-content">
+        <h3 id="modal-obs-estudo-titulo">Registrar estudo</h3>
+        <form id="form-obs-estudo">
+          <label>
+            Data
+            <input type="date" id="obs-estudo-data" required />
+          </label>
+          <label>
+            Observações
+            <textarea id="obs-estudo-texto" rows="3" placeholder="Anotações sobre o estudo..."></textarea>
+          </label>
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-obs-estudo" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Histórico Revisita -->
+    <div id="modal-historico-revisita" class="modal hidden">
+      <div class="modal-content modal-large">
+        <h3 id="historico-revisita-nome">Histórico</h3>
+        <div id="historico-revisita-lista" class="historico-lista"></div>
+        <div class="modal-actions">
+          <button id="btn-mover-estudo" class="btn-secondary">Mover para Estudos</button>
+          <button id="btn-fechar-historico-revisita" class="btn-primary">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Histórico Estudo -->
+    <div id="modal-historico-estudo" class="modal hidden">
+      <div class="modal-content modal-large">
+        <h3 id="historico-estudo-nome">Histórico</h3>
+        <div id="historico-estudo-lista" class="historico-lista"></div>
+        <div class="modal-actions">
+          <button id="btn-fechar-historico-estudo" class="btn-primary">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Selecionar Revisita (para lançamento/timer) -->
+    <div id="modal-selecionar-revisita" class="modal hidden">
+      <div class="modal-content">
+        <h3>Selecione a revisita</h3>
+        <div id="lista-selecao-revisitas" class="select-list"></div>
+        <div class="modal-actions">
+          <button id="btn-nova-revisita-rapida" class="btn-primary">+ Nova revisita</button>
+          <button id="btn-cancel-selecionar-revisita" class="btn-secondary">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Cadastro Rápido Revisita -->
+    <div id="modal-rapido-revisita" class="modal hidden">
+      <div class="modal-content">
+        <h3>Cadastro rápido - Revisita</h3>
+        <form id="form-rapido-revisita" class="form">
+          <label>
+            Nome *
+            <input type="text" id="rapido-revisita-nome" required />
+          </label>
+          <label>
+            Endereço (opcional)
+            <input type="text" id="rapido-revisita-endereco" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-rapido-revisita" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Adicionar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Selecionar Estudo (para lançamento/timer) -->
+    <div id="modal-selecionar-estudo" class="modal hidden">
+      <div class="modal-content">
+        <h3>Selecione o estudo</h3>
+        <div id="lista-selecao-estudos" class="select-list"></div>
+        <div class="modal-actions">
+          <button id="btn-novo-estudo-rapido" class="btn-primary">+ Novo estudo</button>
+          <button id="btn-cancel-selecionar-estudo" class="btn-secondary">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Cadastro Rápido Estudo -->
+    <div id="modal-rapido-estudo" class="modal hidden">
+      <div class="modal-content">
+        <h3>Cadastro rápido - Estudo</h3>
+        <form id="form-rapido-estudo" class="form">
+          <label>
+            Nome do estudante *
+            <input type="text" id="rapido-estudo-nome" required />
+          </label>
+          <label>
+            Dia/horário (opcional)
+            <input type="text" id="rapido-estudo-diahora" placeholder="Ex.: Sábado 15h" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-rapido-estudo" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Adicionar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Configurar Meta -->
+    <div id="modal-meta" class="modal hidden">
+      <div class="modal-content">
+        <h3>Configurar meta</h3>
+        <form id="form-modal-meta">
+          <label>
+            Você está atuando como:
+            <select id="meta-tipo-servico" required>
+              <option value="publicador">Publicador</option>
+              <option value="auxiliar">Pioneiro Auxiliar</option>
+              <option value="regular">Pioneiro Regular</option>
+            </select>
+          </label>
+          <div id="meta-fields"></div>
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-meta" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Adicionar Ancião -->
+    <div id="modal-add-anciao" class="modal hidden">
+      <div class="modal-content">
+        <h3>Adicionar ancião</h3>
+        <form id="form-add-anciao" class="form">
+          <label>
+            Nome *
+            <input type="text" id="anciao-nome" required />
+          </label>
+          <label>
+            WhatsApp (com DDD) *
+            <input type="tel" id="anciao-telefone" placeholder="5599999999999" required />
+          </label>
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-add-anciao" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Adicionar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Selecionar Ancião -->
+    <div id="modal-selecionar-anciao" class="modal hidden">
+      <div class="modal-content">
+        <h3>Enviar relatório para:</h3>
+        <div id="lista-anciaos-select" class="select-list"></div>
+        <div class="modal-actions">
+          <button id="btn-cancel-selecionar-anciao" class="btn-secondary">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Informações adicionais (publicações, revisitas abertas, cartas) -->
+    <div id="modal-info-adicional" class="modal hidden">
+      <div class="modal-content">
+        <h3>Informações adicionais</h3>
+        <form id="form-info-adicional" class="form">
+          <label>
+            Publicações colocadas
+            <input type="number" id="info-publicacoes" min="0" value="0" />
+          </label>
+          <label>
+            Revisitas abertas
+            <input type="number" id="info-revisitas-abertas" min="0" value="0" />
+          </label>
+          <label>
+            Cartas escritas
+            <input type="number" id="info-cartas" min="0" value="0" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-info-adicional" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Confirmar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: Editar lançamento -->
+    <div id="modal-editar-lancamento" class="modal hidden">
+      <div class="modal-content">
+        <h3>Editar lançamento</h3>
+        <form id="form-editar-lancamento" class="form">
+          <input type="hidden" id="edit-lan-id" />
+          <label>
+            Data
+            <input type="date" id="edit-lan-data" required />
+          </label>
+          <div class="grid grid-2">
+            <label>
+              Horas
+              <input type="number" id="edit-lan-horas" min="0" value="0" required />
+            </label>
+            <label>
+              Minutos
+              <input type="number" id="edit-lan-minutos" min="0" max="59" value="0" required />
+            </label>
+          </div>
+          <label>
+            Modalidade
+            <input type="text" id="edit-lan-modalidade" required readonly />
+          </label>
+          <label>
+            Publicações colocadas
+            <input type="number" id="edit-lan-publicacoes" min="0" value="0" />
+          </label>
+          <label>
+            Revisitas abertas
+            <input type="number" id="edit-lan-revisitas-abertas" min="0" value="0" />
+          </label>
+          <label>
+            Cartas escritas
+            <input type="number" id="edit-lan-cartas" min="0" value="0" />
+          </label>
+          <label>
+            Observações
+            <textarea id="edit-lan-obs" rows="2"></textarea>
+          </label>
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-editar-lancamento" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
+  </script>
+</body>
+</html>
