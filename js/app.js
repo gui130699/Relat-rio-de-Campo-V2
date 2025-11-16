@@ -157,12 +157,12 @@ function showView(name) {
   
   if (name === "login") {
     bottomNav.style.display = "none";
-    if (btnHeaderAjuda) btnHeaderAjuda.style.visibility = "hidden";
-    if (btnHeaderConfig) btnHeaderConfig.style.visibility = "hidden";
+    if (btnHeaderAjuda) btnHeaderAjuda.style.display = "none";
+    if (btnHeaderConfig) btnHeaderConfig.style.display = "none";
   } else {
     bottomNav.style.display = "flex";
-    if (btnHeaderAjuda) btnHeaderAjuda.style.visibility = "visible";
-    if (btnHeaderConfig) btnHeaderConfig.style.visibility = "visible";
+    if (btnHeaderAjuda) btnHeaderAjuda.style.display = "inline-flex";
+    if (btnHeaderConfig) btnHeaderConfig.style.display = "inline-flex";
   }
 
   document.querySelectorAll(".nav-button").forEach(btn => {
@@ -393,11 +393,19 @@ async function checkAutoLogin() {
             enableAutoSync(userId);
           }
           
-          populateModalidades();
           checkTimerStatus();
           showView("dashboard");
         } catch (error) {
-          console.log("Auto-login falhou, usuário precisa fazer login manual");
+          console.log("Auto-login Firebase falhou, tentando local");
+        }
+      } else {
+        // Fallback: login local
+        const user = state.users.find(u => u.email === email && u.senha === senha);
+        if (user) {
+          state.currentUserId = user.id;
+          saveState();
+          checkTimerStatus();
+          showView("dashboard");
         }
       }
     } catch (error) {
