@@ -157,12 +157,12 @@ function showView(name) {
   
   if (name === "login") {
     bottomNav.style.display = "none";
-    if (btnHeaderAjuda) btnHeaderAjuda.style.display = "none";
-    if (btnHeaderConfig) btnHeaderConfig.style.display = "none";
+    if (btnHeaderAjuda) btnHeaderAjuda.style.visibility = "hidden";
+    if (btnHeaderConfig) btnHeaderConfig.style.visibility = "hidden";
   } else {
     bottomNav.style.display = "flex";
-    if (btnHeaderAjuda) btnHeaderAjuda.style.display = "flex";
-    if (btnHeaderConfig) btnHeaderConfig.style.display = "flex";
+    if (btnHeaderAjuda) btnHeaderAjuda.style.visibility = "visible";
+    if (btnHeaderConfig) btnHeaderConfig.style.visibility = "visible";
   }
 
   document.querySelectorAll(".nav-button").forEach(btn => {
