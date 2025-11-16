@@ -478,6 +478,15 @@ function initTimerModal() {
   const btnConfirmTimer = document.getElementById("btn-confirm-timer");
   const btnPauseTimer = document.getElementById("btn-pause-timer");
   const btnStopTimer = document.getElementById("btn-stop-timer");
+  const btnMinimizeTimer = document.getElementById("btn-minimize-timer");
+  
+  // Minimizar (fechar) modal do cronômetro
+  if (btnMinimizeTimer) {
+    btnMinimizeTimer.addEventListener("click", () => {
+      closeModal("modal-cronometro");
+      showToast("Timer continua rodando em segundo plano", "info");
+    });
+  }
   
   // Abrir modal de seleção de modalidades
   btnStartTimer.addEventListener("click", () => {
