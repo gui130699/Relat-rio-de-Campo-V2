@@ -313,6 +313,116 @@
           <button id="btn-logout" class="btn-secondary" style="width: 100%;">🚪 Sair</button>
         </div>
       </section>
+
+      <!-- VIEW: AJUDA -->
+      <section class="view" data-view="ajuda">
+        <h2 class="page-title">❓ Ajuda</h2>
+        <p class="page-subtitle">Aprenda a usar todas as funcionalidades do aplicativo</p>
+
+        <div class="card">
+          <h3>🏠 Início (Dashboard)</h3>
+          <p class="text-muted small">Aqui você visualiza o resumo do mês atual:</p>
+          <ul class="help-list">
+            <li><strong>Horas:</strong> Total de horas e minutos trabalhados no mês</li>
+            <li><strong>Meta:</strong> Meta de horas configurada para seu tipo de serviço</li>
+            <li><strong>Progresso:</strong> Percentual de conclusão da meta</li>
+            <li><strong>Timer:</strong> Se houver um cronômetro ativo, ele aparecerá aqui com tempo correndo em tempo real</li>
+          </ul>
+          <p class="text-muted small">💡 <strong>Dica:</strong> Clique no botão <strong>"⏱️ Iniciar Cronômetro"</strong> para começar a contar suas horas rapidamente!</p>
+        </div>
+
+        <div class="card">
+          <h3>⏱️ Cronômetro</h3>
+          <p class="text-muted small">O cronômetro é a forma mais prática de registrar suas horas de campo:</p>
+          <ul class="help-list">
+            <li><strong>Iniciar:</strong> Clique no botão verde "⏱️ Iniciar Cronômetro" e selecione as modalidades (Campo, Revisitas, Estudos, Vídeos, etc.)</li>
+            <li><strong>Pausar:</strong> Clique em "⏸️ Pausar" para interromper temporariamente</li>
+            <li><strong>Retomar:</strong> Clique em "▶️ Retomar" para continuar de onde parou</li>
+            <li><strong>Encerrar:</strong> Clique em "⏹️ Encerrar" para finalizar e salvar o tempo</li>
+            <li><strong>Minimizar:</strong> Clique no "X" no canto superior direito para fechar a janela do timer (ele continua rodando em segundo plano)</li>
+          </ul>
+          <p class="text-muted small">💡 <strong>Dica:</strong> O cronômetro continua rodando mesmo se você fechar o aplicativo! Você receberá notificações com opções de pausar ou encerrar.</p>
+        </div>
+
+        <div class="card">
+          <h3>🔁 Revisitas e 📖 Estudos</h3>
+          <p class="text-muted small">Quando você seleciona "Revisitas" ou "Estudos" no cronômetro ou lançamento:</p>
+          <ul class="help-list">
+            <li><strong>Selecionar pessoa:</strong> Escolha o nome da pessoa na lista suspensa</li>
+            <li><strong>Confirmação de contato:</strong> Ao encerrar, o app pergunta se você conseguiu contatar a pessoa</li>
+            <li><strong>Se SIM:</strong> A visita é registrada na aba correspondente (Revisitas ou Estudos)</li>
+            <li><strong>Se NÃO:</strong> Apenas as horas são contabilizadas como "Campo" (a modalidade Revisitas/Estudos é removida automaticamente)</li>
+          </ul>
+          <p class="text-muted small">💡 <strong>Dica:</strong> Nas abas "🔁 Revisitas" e "📖 Estudos" você pode adicionar novos contatos, visualizar histórico de visitas e remover pessoas da lista.</p>
+        </div>
+
+        <div class="card">
+          <h3>🕒 Lançar</h3>
+          <p class="text-muted small">Use esta aba para registrar manualmente atividades já realizadas:</p>
+          <ul class="help-list">
+            <li><strong>Data:</strong> Selecione o dia da atividade</li>
+            <li><strong>Duração:</strong> Informe horas e minutos trabalhados</li>
+            <li><strong>Modalidades:</strong> Marque as atividades realizadas (você pode selecionar várias)</li>
+            <li><strong>Observações:</strong> Campo opcional para anotações</li>
+          </ul>
+          <p class="text-muted small">⚠️ <strong>Importante:</strong> Ao selecionar Revisitas ou Estudos, escolha a pessoa e confirme se houve contato (mesma lógica do cronômetro).</p>
+        </div>
+
+        <div class="card">
+          <h3>📤 Relatório</h3>
+          <p class="text-muted small">Visualize e gerencie seus relatórios mensais:</p>
+          <ul class="help-list">
+            <li><strong>Selecionar mês:</strong> Use os botões "◀️" e "▶️" para navegar entre meses</li>
+            <li><strong>Resumo:</strong> Veja total de horas, publicações, vídeos, revisitas, estudos e observações</li>
+            <li><strong>Detalhes:</strong> Clique em "📋 Ver lançamentos" para ver todos os registros do mês</li>
+            <li><strong>Editar:</strong> Clique no ícone de lápis ✏️ para modificar um lançamento</li>
+            <li><strong>Excluir:</strong> Clique no ícone de lixeira 🗑️ para remover um lançamento</li>
+            <li><strong>Enviar:</strong> Clique em "📤 Enviar Relatório" para gerar um e-mail pré-preenchido para seu ancião</li>
+          </ul>
+          <p class="text-muted small">💡 <strong>Dica:</strong> Os dados são salvos automaticamente na nuvem se você estiver logado!</p>
+        </div>
+
+        <div class="card">
+          <h3>⚙️ Configurações</h3>
+          <p class="text-muted small">Personalize o aplicativo de acordo com suas necessidades:</p>
+          <ul class="help-list">
+            <li><strong>Dados pessoais:</strong> Nome e congregação</li>
+            <li><strong>Tipo de serviço:</strong> Publicador, Pioneiro Auxiliar ou Pioneiro Regular (define sua meta de horas)</li>
+            <li><strong>Anciãos:</strong> Adicione os anciãos que recebem relatórios (usado no envio de e-mail)</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>☁️ Sincronização em Nuvem</h3>
+          <p class="text-muted small">Seus dados são automaticamente sincronizados com a nuvem:</p>
+          <ul class="help-list">
+            <li><strong>Automática:</strong> Toda alteração é salva instantaneamente na nuvem</li>
+            <li><strong>Múltiplos dispositivos:</strong> Acesse seus dados de qualquer lugar (celular, tablet, computador)</li>
+            <li><strong>Seguro:</strong> Seus dados são protegidos com autenticação por e-mail e senha</li>
+          </ul>
+          <p class="text-muted small">💡 <strong>Dica:</strong> Funciona offline! As alterações são salvas localmente e sincronizadas automaticamente quando você tiver internet.</p>
+        </div>
+
+        <div class="card">
+          <h3>📱 Instalar Aplicativo</h3>
+          <p class="text-muted small">Este é um Progressive Web App (PWA) - você pode instalá-lo como um app nativo:</p>
+          <ul class="help-list">
+            <li><strong>Android/iPhone:</strong> Clique em "📱 Instalar" no topo da página ou no menu do navegador</li>
+            <li><strong>Computador:</strong> Use o botão "Instalar" que aparece na barra de endereço ou no menu</li>
+            <li><strong>Vantagens:</strong> Acesso rápido, notificações, funciona offline e ocupa pouco espaço</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>🌓 Tema Claro/Escuro</h3>
+          <p class="text-muted small">Clique no botão 🌓 no topo para alternar entre tema claro e escuro.</p>
+        </div>
+
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center;">
+          <h3 style="color: white;">💬 Precisa de mais ajuda?</h3>
+          <p style="color: rgba(255,255,255,0.9);">Se tiver dúvidas ou sugestões, entre em contato com o desenvolvedor.</p>
+        </div>
+      </section>
     </main>
 
     <!-- NAV BOTTOM -->
@@ -322,6 +432,7 @@
       <button class="nav-button" data-nav="revisitas">🔁<span>Revisitas</span></button>
       <button class="nav-button" data-nav="estudos">📖<span>Estudos</span></button>
       <button class="nav-button" data-nav="relatorio">📤<span>Relatório</span></button>
+      <button class="nav-button" data-nav="ajuda">❓<span>Ajuda</span></button>
       <button class="nav-button" data-nav="config">⚙️<span>Config</span></button>
     </nav>
 

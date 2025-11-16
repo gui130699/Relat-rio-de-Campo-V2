@@ -954,6 +954,29 @@ textarea:focus {
   background: #d32f2f;
 }
 
+/* AJUDA */
+
+.help-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+
+.help-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
+  line-height: 1.6;
+}
+
+.help-list li:last-child {
+  border-bottom: none;
+}
+
+.help-list strong {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
 /* UTILITÁRIOS */
 
 .hidden {
