@@ -270,7 +270,7 @@ function initAuth() {
     });
   });
 
-  formSignup.addEventListener("submit", e => {
+  formSignup.addEventListener("submit", async (e) => {
     e.preventDefault();
     const nome = document.getElementById("signup-nome").value.trim();
     const congregacao = document.getElementById("signup-congregacao").value.trim();
@@ -278,48 +278,94 @@ function initAuth() {
     const email = document.getElementById("signup-email").value.trim().toLowerCase();
     const senha = document.getElementById("signup-password").value;
 
-    if (state.users.some(u => u.email === email)) {
-      showToast("Já existe um usuário com esse e-mail.", "error");
-      return;
+    try {
+      // Criar usuário no Firebase Authentication
+      await waitForFirebase();
+      const { createUserWithEmailAndPassword } = window.firebaseAuthMethods;
+      const auth = window.firebaseAuth;
+      
+      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+      const firebaseUser = userCredential.user;
+      
+      // Criar dados locais
+      const id = firebaseUser.uid;
+      state.users.push({ id, nome, congregacao, tipo, email, senha });
+      state.config[id] = {
+        nome,
+        congregacao,
+        tipo,
+        anciao: ""
+      };
+      state.metas[id] = {
+        tipo,
+        pubMensal: null,
+        auxMensal: null,
+        regTipo: "mensal",
+        regMensal: null,
+        regAnual: null
+      };
+      state.currentUserId = id;
+      saveState();
+      
+      // Sincronizar com Firebase
+      await syncToFirebase(id);
+      enableAutoSync(id);
+      
+      formSignup.reset();
+      populateModalidades();
+      showToast("Conta criada com sucesso!", "success");
+      showView("dashboard");
+    } catch (error) {
+      console.error("Erro ao criar conta:", error);
+      if (error.code === 'auth/email-already-in-use') {
+        showToast("Já existe uma conta com esse e-mail.", "error");
+      } else {
+        showToast("Erro ao criar conta. Tente novamente.", "error");
+      }
     }
-
-    const id = uuid();
-    state.users.push({ id, nome, congregacao, tipo, email, senha });
-    state.config[id] = {
-      nome,
-      congregacao,
-      tipo,
-      anciao: ""
-    };
-    state.metas[id] = {
-      tipo,
-      pubMensal: null,
-      auxMensal: null,
-      regTipo: "mensal",
-      regMensal: null,
-      regAnual: null
-    };
-    state.currentUserId = id;
-    saveState();
-    formSignup.reset();
-    populateModalidades();
-    showView("dashboard");
   });
 
-  formLogin.addEventListener("submit", e => {
+  formLogin.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("login-email").value.trim().toLowerCase();
     const senha = document.getElementById("login-password").value;
-    const user = state.users.find(u => u.email === email && u.senha === senha);
-    if (!user) {
-      showToast("Usuário ou senha inválidos.", "error");
-      return;
+    
+    try {
+      // Fazer login no Firebase
+      await waitForFirebase();
+      const { signInWithEmailAndPassword } = window.firebaseAuthMethods;
+      const auth = window.firebaseAuth;
+      
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      const firebaseUser = userCredential.user;
+      const userId = firebaseUser.uid;
+      
+      // Carregar dados do Firebase
+      await loadFromFirebase(userId);
+      
+      // Recarregar estado local
+      loadState();
+      
+      // Verificar se usuário existe localmente
+      let user = state.users.find(u => u.id === userId);
+      if (!user) {
+        // Criar entrada local se não existir
+        user = { id: userId, email, senha, nome: email.split('@')[0], congregacao: '', tipo: 'publicador' };
+        state.users.push(user);
+      }
+      
+      state.currentUserId = userId;
+      saveState();
+      enableAutoSync(userId);
+      
+      populateModalidades();
+      checkTimerStatus();
+      showToast("Login realizado com sucesso!", "success");
+      showView("dashboard");
+    } catch (error) {
+      console.error("Erro ao fazer login:", error);
+      showToast("E-mail ou senha inválidos.", "error");
     }
-    state.currentUserId = user.id;
-    saveState();
-    populateModalidades();
-    checkTimerStatus(); // Verificar se tem timer ativo
-    showView("dashboard");
   });
 }
 
@@ -2143,22 +2189,66 @@ function initConfigForm() {
     renderDashboard();
   });
 
+  // Sincronização Firebase
+  const btnSync = document.getElementById("btn-sync-firebase");
+  const syncStatus = document.getElementById("sync-status");
+  
+  btnSync.addEventListener("click", async () => {
+    const user = getCurrentUser();
+    if (!user) return;
+    
+    btnSync.disabled = true;
+    btnSync.textContent = "⏳ Sincronizando...";
+    syncStatus.textContent = "";
+    
+    try {
+      const success = await syncToFirebase(user.id);
+      if (success) {
+        showToast("Dados sincronizados com sucesso!", "success");
+        syncStatus.textContent = `✅ Última sincronização: ${new Date().toLocaleString('pt-BR')}`;
+      } else {
+        showToast("Erro ao sincronizar. Tente novamente.", "error");
+      }
+    } catch (error) {
+      showToast("Erro ao sincronizar com Firebase.", "error");
+      console.error(error);
+    } finally {
+      btnSync.disabled = false;
+      btnSync.textContent = "☁️ Sincronizar agora";
+    }
+  });
+
+  // Logout
+  const btnLogout = document.getElementById("btn-logout");
+  btnLogout.addEventListener("click", async () => {
+    if (confirm("Deseja realmente sair da conta?")) {
+      try {
+        await waitForFirebase();
+        const { signOut } = window.firebaseAuthMethods;
+        const auth = window.firebaseAuth;
+        await signOut(auth);
+        
+        state.currentUserId = null;
+        saveState();
+        showToast("Você saiu da conta.", "info");
+        location.reload();
+      } catch (error) {
+        console.error("Erro ao fazer logout:", error);
+        state.currentUserId = null;
+        saveState();
+        location.reload();
+      }
+    }
+  });
+
   // Backup e restauração
   const btnExport = document.getElementById("btn-export-data");
   const btnImport = document.getElementById("btn-import-data");
-  const fileImport = document.getElementById("file-import");
-  const btnLogout = document.getElementById("btn-logout");
+  const fileImport = document.getElementById("file-import-data");
 
   btnExport.addEventListener("click", exportarDados);
   btnImport.addEventListener("click", () => fileImport.click());
   fileImport.addEventListener("change", importarDados);
-  btnLogout.addEventListener("click", () => {
-    if (confirm("Deseja realmente sair?")) {
-      state.currentUserId = null;
-      saveState();
-      location.reload();
-    }
-  });
 
   // Gerenciar anciãos
   initGerenciarAnciaos();
