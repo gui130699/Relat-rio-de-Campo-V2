@@ -64,6 +64,25 @@
               🔐 Entrar com Face ID / Touch ID
             </button>
           </form>
+          
+          <!-- Instruções de instalação para iPhone -->
+          <div id="ios-install-prompt" style="display: none; margin-top: 16px; padding: 12px; background: rgba(138, 107, 255, 0.1); border-radius: 12px; border: 1px solid rgba(138, 107, 255, 0.3);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="font-size: 24px;">📱</span>
+              <strong style="color: var(--color-accent);">Instalar no iPhone</strong>
+            </div>
+            <p style="font-size: 0.85rem; margin: 8px 0; line-height: 1.5;">
+              Para usar como aplicativo:
+            </p>
+            <ol style="font-size: 0.85rem; line-height: 1.6; margin: 8px 0; padding-left: 20px;">
+              <li>Toque no botão <strong>Compartilhar</strong> <span style="font-size: 18px;">⬆️</span> (na barra inferior do Safari)</li>
+              <li>Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong></li>
+              <li>Toque em <strong>"Adicionar"</strong> no canto superior direito</li>
+            </ol>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px;">
+              ℹ️ Funciona apenas no Safari do iPhone
+            </p>
+          </div>
 
           <!-- Cadastro -->
           <form id="form-signup" class="form form-auth hidden">

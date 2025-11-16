@@ -412,37 +412,52 @@ let deferredPrompt;
 
 function initInstallButton() {
   const btnInstall = document.getElementById("btn-install-app");
+  const iosPrompt = document.getElementById("ios-install-prompt");
   
   // Verificar se já está instalado
   if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
     btnInstall.style.display = 'none';
+    if (iosPrompt) iosPrompt.style.display = 'none';
     return;
   }
 
-  // Escutar evento beforeinstallprompt
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    btnInstall.style.display = 'flex';
-  });
-
-  // Click no botão de instalar
-  btnInstall.addEventListener('click', async () => {
-    if (!deferredPrompt) {
-      showToast('Instalação não disponível neste momento.', 'info');
-      return;
+  // Detectar iOS (iPhone/iPad)
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isInStandaloneMode = window.navigator.standalone === true;
+  
+  if (isIOS && !isInStandaloneMode) {
+    // Mostrar instruções para iOS
+    if (iosPrompt) {
+      iosPrompt.style.display = 'block';
     }
+    btnInstall.style.display = 'none';
+  } else {
+    // Escutar evento beforeinstallprompt (Android/Desktop)
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      btnInstall.style.display = 'flex';
+      if (iosPrompt) iosPrompt.style.display = 'none';
+    });
 
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      showToast('Aplicativo instalado com sucesso!', 'success');
-      btnInstall.style.display = 'none';
-    }
-    
-    deferredPrompt = null;
-  });
+    // Click no botão de instalar
+    btnInstall.addEventListener('click', async () => {
+      if (!deferredPrompt) {
+        showToast('Instalação não disponível neste momento.', 'info');
+        return;
+      }
+
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        showToast('Aplicativo instalado com sucesso!', 'success');
+        btnInstall.style.display = 'none';
+      }
+      
+      deferredPrompt = null;
+    });
+  }
 
   // Escutar evento de instalação concluída
   window.addEventListener('appinstalled', () => {
