@@ -2869,7 +2869,7 @@ function initBottomNav() {
     if (!btn) return;
     const view = btn.dataset.nav;
     if (view === "dashboard" || view === "lancamento" || view === "revisitas" ||
-        view === "relatorio" || view === "config" || view === "estudos") {
+        view === "relatorio" || view === "ajuda" || view === "config" || view === "estudos") {
       showView(view);
     }
   });
