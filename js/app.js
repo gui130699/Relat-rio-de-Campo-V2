@@ -1222,7 +1222,7 @@ function checkTimerStatus() {
     }
     
     if (btnStartTimer) {
-      btnStartTimer.textContent = "⏱️ Gerenciar timer";
+      btnStartTimer.textContent = "⏹️ Encerrar Cronômetro";
       btnStartTimer.classList.add("timer-active");
     }
   } else {
